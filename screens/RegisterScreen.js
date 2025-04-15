@@ -1,43 +1,116 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../src/config/firebaseConfig";
 
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
+    // Validaciones
+    if (!email || !password || !confirmPassword) {
+      setError("Por favor, completa todos los campos");
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Registro exitoso 🎉");
+      setError("");
+      setIsLoading(true);
+      
+      // Crear usuario en Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Enviar correo de verificación
+      await sendEmailVerification(user);
+      setIsLoading(false);
+
+      Alert.alert(
+        "Cuenta creada 🎉",
+        "Te hemos enviado un correo de verificación. Confirma tu email antes de iniciar sesión.",
+        [{ text: "Aceptar", onPress: () => navigation.navigate("Login") }]
+      );
+
     } catch (err) {
-      setError(err.message);
+      setIsLoading(false);
+
+      // Mensajes de error personalizados
+      if (err.code === 'auth/email-already-in-use') {
+        setError("Este correo ya está registrado");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("Formato de correo inválido");
+      } else if (err.code === 'auth/weak-password') {
+        setError("La contraseña es demasiado débil");
+      } else {
+        setError("Error al crear la cuenta. Intenta nuevamente");
+      }
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Registrarse</Text>
+      <Text style={styles.title}>Crear Cuenta</Text>
+      
       <TextInput
-        placeholder="Correo"
+        placeholder="Correo electrónico"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => setEmail(text)}
         style={styles.input}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
+      
       <TextInput
         placeholder="Contraseña"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => setPassword(text)}
         style={styles.input}
         secureTextEntry
+        autoCapitalize="none"
       />
+      
+      <TextInput
+        placeholder="Confirmar contraseña"
+        value={confirmPassword}
+        onChangeText={(text) => setConfirmPassword(text)}
+        style={styles.input}
+        secureTextEntry
+        autoCapitalize="none"
+      />
+      
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button title="Registrarse" onPress={handleRegister} />
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+      
+      <TouchableOpacity 
+        style={styles.registerButton} 
+        onPress={handleRegister}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.loginButton} 
+        onPress={() => navigation.navigate("Login")}
+      >
+        <Text style={styles.loginText}>¿Ya tienes cuenta? Inicia sesión</Text>
       </TouchableOpacity>
     </View>
   );
@@ -47,32 +120,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 20,
+    padding: 25,
     backgroundColor: "#fff",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 30,
+    textAlign: "center"
   },
   input: {
-    height: 40,
-    borderColor: "gray",
+    height: 55,
     borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 15,
+    backgroundColor: "#f9f9f9",
+    fontSize: 16,
   },
   error: {
-    color: "red",
+    color: "#e74c3c",
+    marginBottom: 16,
     textAlign: "center",
-    marginBottom: 10,
   },
-  link: {
-    marginTop: 10,
-    color: "blue",
-    textAlign: "center",
-    textDecorationLine: "underline",
+  registerButton: {
+    backgroundColor: "#0370b7",
+    borderRadius: 12,
+    height: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  registerButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loginButton: {
+    alignItems: "center",
+    padding: 10,
+  },
+  loginText: {
+    color: "#0370b7",
+    fontSize: 15,
   },
 });
