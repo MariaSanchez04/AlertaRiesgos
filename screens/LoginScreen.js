@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { auth } from "../src/config/firebaseConfig";
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { loginUser } from "../src/config/firebaseConfig";
+import { auth, sendEmailVerification } from "../src/config/firebaseConfig";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -11,36 +19,32 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError("Por favor, completa todos los campos");
+      setError("Por favor, completa todos los campos.");
       return;
     }
 
+    setIsLoading(true);
+    setError("");
     try {
-      setError("");
-      setIsLoading(true);
-      
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
+      const user = await loginUser(email, password);
       if (!user.emailVerified) {
-        setIsLoading(false);
         Alert.alert(
           "Verifica tu correo",
           "Debes verificar tu dirección de correo antes de iniciar sesión.",
           [
             { text: "Reenviar Correo", onPress: handleResendVerification },
-            { text: "Aceptar" }
+            { text: "Aceptar" },
           ]
         );
         return;
       }
 
+      navigation.replace("Home", { userId: user.uid, email });
+    } catch (error) {
+      console.error(error);
+      setError("Credenciales incorrectas.");
+    } finally {
       setIsLoading(false);
-      navigation.replace("Home");
-
-    } catch (err) {
-      setIsLoading(false);
-      setError("Credenciales incorrectas. Verifica tu correo y contraseña.");
     }
   };
 
@@ -50,8 +54,8 @@ export default function LoginScreen({ navigation }) {
         await sendEmailVerification(auth.currentUser);
         Alert.alert("Correo reenviado", "Revisa tu bandeja de entrada.");
       } catch (error) {
-        console.error("Error al reenviar correo:", error.message);
-        Alert.alert("Error", "No se pudo reenviar el correo de verificación.");
+        Alert.alert("Error", "No se pudo reenviar el correo.");
+        console.error(error);
       }
     }
   };
@@ -59,35 +63,36 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Iniciar Sesión</Text>
-      
+
       <TextInput
         placeholder="Correo electrónico"
-        value={email}
-        onChangeText={text => setEmail(text)}
         style={styles.input}
-        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
-      
       <TextInput
         placeholder="Contraseña"
-        value={password}
-        onChangeText={text => setPassword(text)}
         style={styles.input}
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
         autoCapitalize="none"
       />
-      
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      
-      <TouchableOpacity 
-        style={styles.loginButton} 
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={handleLogin}
         disabled={isLoading}
       >
-        <Text style={styles.loginButtonText}>
-          {isLoading ? "Cargando..." : "Iniciar Sesión"}
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Iniciar Sesión</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
@@ -109,7 +114,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#333",
     marginBottom: 30,
-    textAlign: "center"
+    textAlign: "center",
   },
   input: {
     height: 55,
@@ -126,7 +131,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
   },
-  loginButton: {
+  button: {
     backgroundColor: "#0370b7",
     borderRadius: 12,
     height: 55,
@@ -134,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  loginButtonText: {
+  buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
