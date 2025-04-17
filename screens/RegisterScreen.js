@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { sendEmailVerification } from "firebase/auth";
 import { registerUser, auth } from "../src/config/firebaseConfig";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function RegisterScreen({ navigation }) {
   const [fName, setFName] = useState("");
@@ -17,6 +18,8 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,6 +69,26 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
+  const renderPasswordInput = (value, setValue, show, setShow, placeholder) => (
+    <View style={styles.passwordContainer}>
+      <TextInput
+        placeholder={placeholder}
+        value={value}
+        onChangeText={setValue}
+        style={styles.passwordInput}
+        secureTextEntry={!show}
+        autoCapitalize="none"
+      />
+      <TouchableOpacity onPress={() => setShow(!show)}>
+        <Ionicons
+          name={show ? "eye-off-outline" : "eye-outline"}
+          size={24}
+          color="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Crear Cuenta</Text>
@@ -93,23 +116,8 @@ export default function RegisterScreen({ navigation }) {
         autoCapitalize="none"
       />
 
-      <TextInput
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        placeholder="Confirmar contraseña"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        style={styles.input}
-        secureTextEntry
-        autoCapitalize="none"
-      />
+      {renderPasswordInput(password, setPassword, showPassword, setShowPassword, "Contraseña")}
+      {renderPasswordInput(confirmPassword, setConfirmPassword, showConfirmPassword, setShowConfirmPassword, "Confirmar contraseña")}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -136,30 +144,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 25,
-    backgroundColor: "#fff",
+    padding: 30,
+    backgroundColor: "#f7f7f7",
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     color: "#333",
-    marginBottom: 30,
+    marginBottom: 40,
     textAlign: "center",
   },
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: "#ccc",
     borderRadius: 12,
-    marginBottom: 16,
-    paddingHorizontal: 15,
-    backgroundColor: "#f9f9f9",
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
+    fontSize: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 55,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 12,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
+  passwordInput: {
+    flex: 1,
     fontSize: 16,
   },
   error: {
     color: "#e74c3c",
     marginBottom: 16,
     textAlign: "center",
+    fontSize: 14,
   },
   button: {
     backgroundColor: "#0370b7",
@@ -168,15 +200,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+    elevation: 5,
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
   link: {
     color: "#0370b7",
     textAlign: "center",
-    fontSize: 15,
+    fontSize: 16,
   },
 });

@@ -8,12 +8,14 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons"; // 👈 Asegúrate de tener esto
 import { loginUser } from "../src/config/firebaseConfig";
 import { auth, sendEmailVerification } from "../src/config/firebaseConfig";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,6 +27,7 @@ export default function LoginScreen({ navigation }) {
 
     setIsLoading(true);
     setError("");
+
     try {
       const user = await loginUser(email, password);
       if (!user.emailVerified) {
@@ -41,8 +44,13 @@ export default function LoginScreen({ navigation }) {
 
       navigation.replace("Home", { userId: user.uid, email });
     } catch (error) {
-      console.error(error);
-      setError("Credenciales incorrectas.");
+      if (error.code === "auth/user-not-found") {
+        setError("No estás registrado. Por favor, regístrate.");
+      } else if (error.code === "auth/invalid-credential") {
+        setError("Credenciales inválidas. Por favor, revisa tu correo y contraseña.");
+      } else {
+        setError("Credenciales incorrectas.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +63,6 @@ export default function LoginScreen({ navigation }) {
         Alert.alert("Correo reenviado", "Revisa tu bandeja de entrada.");
       } catch (error) {
         Alert.alert("Error", "No se pudo reenviar el correo.");
-        console.error(error);
       }
     }
   };
@@ -72,14 +79,25 @@ export default function LoginScreen({ navigation }) {
         autoCapitalize="none"
         keyboardType="email-address"
       />
-      <TextInput
-        placeholder="Contraseña"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-      />
+
+      {/* Input con ojito usando Ionicons */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Contraseña"
+          style={styles.passwordInput}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={24}
+            color="#666"
+          />
+        </TouchableOpacity>
+      </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -96,7 +114,9 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
+        <Text style={styles.link}>
+          ¿No tienes cuenta? <Text style={styles.linkBold}>Regístrate</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -126,6 +146,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     fontSize: 16,
   },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
+  },
+  passwordInput: {
+    flex: 1,
+    height: 55,
+    fontSize: 16,
+  },
   error: {
     color: "#e74c3c",
     marginBottom: 16,
@@ -145,8 +180,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   link: {
-    color: "#0370b7",
+    color: "#333",
     textAlign: "center",
     fontSize: 15,
+  },
+  linkBold: {
+    color: "#0370b7",
+    fontWeight: "600",
   },
 });
