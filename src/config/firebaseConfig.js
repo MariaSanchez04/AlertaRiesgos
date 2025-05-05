@@ -1,34 +1,41 @@
-import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
-} from "firebase/auth";
-import { 
-  getFirestore, 
-  setDoc, 
-  doc, 
-  getDoc 
-} from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import {
+  initializeAuth,
+  getReactNativePersistence,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  getFirestore,
+  setDoc,
+  doc,
+  getDoc
+} from 'firebase/firestore';
 import { Alert } from 'react-native';
 
-// Configuración de Firebase (usando la segunda)
+// Configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyChtka2Wkc9cKaTfl4nDm3Cd4CN9hqhFDA",
-  authDomain: "proyecto-d8a81.firebaseapp.com",
-  projectId: "proyecto-d8a81",
-  storageBucket: "proyecto-d8a81.firebasestorage.app",
-  messagingSenderId: "537197437679",
-  appId: "1:537197437679:web:a430db0ed795bcde8db11a",
-  measurementId: "G-H5M9B9JC7R"
+  apiKey: 'AIzaSyChtka2Wkc9cKaTfl4nDm3Cd4CN9hqhFDA',
+  authDomain: 'proyecto-d8a81.firebaseapp.com',
+  projectId: 'proyecto-d8a81',
+  storageBucket: 'proyecto-d8a81.firebasestorage.app',
+  messagingSenderId: '537197437679',
+  appId: '1:537197437679:web:a430db0ed795bcde8db11a',
+  measurementId: 'G-H5M9B9JC7R'
 };
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth();
-export const db = getFirestore(app);
+
+// Inicializar Auth con persistencia para React Native
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
+
+const db = getFirestore(app);
 
 // Función para mostrar mensajes
 export const showMessage = (message) => {
@@ -38,14 +45,14 @@ export const showMessage = (message) => {
 // Obtener datos del usuario desde Firestore
 export const getUserData = async (userId) => {
   try {
-    const userDoc = await getDoc(doc(db, "users", userId));
+    const userDoc = await getDoc(doc(db, 'users', userId));
     if (userDoc.exists()) {
       return userDoc.data();
     } else {
-      throw new Error("User data not found.");
+      throw new Error('User data not found.');
     }
   } catch (error) {
-    console.error("Error fetching user data:", error);
+    console.error('Error fetching user data:', error);
     return null;
   }
 };
@@ -54,12 +61,12 @@ export const getUserData = async (userId) => {
 export const registerUser = async (email, password, firstName, lastName) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", userCredential.user.uid), {
+    await setDoc(doc(db, 'users', userCredential.user.uid), {
       email,
       firstName,
       lastName
     });
-    console.log("Cuenta creada exitosamente");
+    console.log('Cuenta creada exitosamente');
     return userCredential.user;
   } catch (error) {
     const errorCode = error.code;
@@ -82,10 +89,10 @@ export const registerUser = async (email, password, firstName, lastName) => {
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("Inicio de sesión exitoso");
+    console.log('Inicio de sesión exitoso');
     return userCredential.user;
   } catch (error) {
-    console.error("Error en inicio de sesión:", error);
+    console.error('Error en inicio de sesión:', error);
     throw error;
   }
 };
@@ -94,9 +101,9 @@ export const loginUser = async (email, password) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
-    console.log("Sesión cerrada exitosamente");
+    console.log('Sesión cerrada exitosamente');
   } catch (error) {
-    console.error("Error al cerrar sesión:", error);
+    console.error('Error al cerrar sesión:', error);
     throw error;
   }
 };
@@ -106,4 +113,5 @@ export const observeAuthState = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
 
+export { app, auth, db };
 export default app;
