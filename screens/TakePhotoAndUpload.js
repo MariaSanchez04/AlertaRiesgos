@@ -1,29 +1,32 @@
 import { useState, useEffect, useRef } from "react";
-import { 
-  View, 
-  Text, 
-  Image, 
-  TextInput, 
-  ActivityIndicator, 
-  StyleSheet, 
-  Alert, 
-  ScrollView, 
-  TouchableOpacity, 
-  Modal, 
-  KeyboardAvoidingView, 
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  ActivityIndicator,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Dimensions,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import * as FileSystem from "expo-file-system";
 import { db } from "../src/config/firebaseConfig";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";  // Asegúrate de importar serverTimestamp
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Asegúrate de importar serverTimestamp
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
-import { configurarNotificaciones, mostrarNotificacion } from "../src/config/notificationsHelper"; // Importa el helper
+import {
+  configurarNotificaciones,
+  mostrarNotificacion,
+} from "../src/config/notificationsHelper"; // Importa el helper
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
 export default function ReportScreen() {
   const [imagenes, setImagenes] = useState([]);
@@ -108,10 +111,13 @@ export default function ReportScreen() {
         formData.append("upload_preset", "reportes");
         formData.append("folder", "reportes");
 
-        const respuesta = await fetch("https://api.cloudinary.com/v1_1/dd3y0fvce/image/upload", {
-          method: "POST",
-          body: formData,
-        });
+        const respuesta = await fetch(
+          "https://api.cloudinary.com/v1_1/dd3y0fvce/image/upload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!respuesta.ok) {
           const errorData = await respuesta.json();
@@ -135,11 +141,14 @@ export default function ReportScreen() {
         descripcion,
         latitud: ubicacion.latitude,
         longitud: ubicacion.longitude,
-        creadoEn: serverTimestamp(),  // Esto asegura que Firebase maneje el timestamp automáticamente
+        creadoEn: serverTimestamp(), // Esto asegura que Firebase maneje el timestamp automáticamente
       });
 
       // Mostrar notificación local tras un reporte exitoso
-      await mostrarNotificacion("Nuevo reporte enviado", "Tu reporte fue enviado correctamente.");
+      await mostrarNotificacion(
+        "Nuevo reporte enviado",
+        "Tu reporte fue enviado correctamente."
+      );
 
       // Mostrar mensaje de éxito con una alerta
       Alert.alert(
@@ -148,8 +157,8 @@ export default function ReportScreen() {
         [
           {
             text: "OK",
-            onPress: () => navigation.navigate('Reportes'), 
-          }
+            onPress: () => navigation.navigate("Reportes"),
+          },
         ],
         { cancelable: false }
       );
@@ -170,7 +179,7 @@ export default function ReportScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -184,35 +193,45 @@ export default function ReportScreen() {
           numberOfLines={4}
         />
 
-        <TouchableOpacity style={styles.button} onPress={tomarFoto} disabled={cargando}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={tomarFoto}
+          disabled={cargando}
+        >
           <Text style={styles.buttonText}>📸 Tomar Foto</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={seleccionarImagenes} disabled={cargando}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={seleccionarImagenes}
+          disabled={cargando}
+        >
           <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
         </TouchableOpacity>
 
         {imagenes.length > 0 && (
           <View style={styles.imagesSection}>
-            <Text style={styles.imagesTitle}>Imágenes seleccionadas ({imagenes.length})</Text>
-            <ScrollView 
-              horizontal={true} 
+            <Text style={styles.imagesTitle}>
+              Imágenes seleccionadas ({imagenes.length})
+            </Text>
+            <ScrollView
+              horizontal={true}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.imagesScrollContainer}
             >
               {imagenes.map((imagen, index) => (
                 <View key={index} style={styles.imageContainer}>
-                  <TouchableOpacity 
-                    activeOpacity={0.7} 
+                  <TouchableOpacity
+                    activeOpacity={0.7}
                     onPress={() => setImagenSeleccionada(imagen.uri)}
                   >
-                    <Image 
-                      source={{ uri: imagen.uri }} 
+                    <Image
+                      source={{ uri: imagen.uri }}
                       style={styles.image}
                       resizeMode="cover"
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.deleteButton} 
+                  <TouchableOpacity
+                    style={styles.deleteButton}
                     onPress={() => eliminarImagen(imagen.uri)}
                   >
                     <Text style={styles.deleteButtonText}>❌</Text>
@@ -224,7 +243,9 @@ export default function ReportScreen() {
         )}
 
         <Text style={styles.locationLabel}>Ubicación:</Text>
-        {ubicacionError && <Text style={styles.errorText}>{ubicacionError}</Text>}
+        {ubicacionError && (
+          <Text style={styles.errorText}>{ubicacionError}</Text>
+        )}
 
         {ubicacion && !ubicacionError ? (
           <View style={styles.mapContainer}>
@@ -250,17 +271,29 @@ export default function ReportScreen() {
           <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
         )}
 
-        <TouchableOpacity 
-          style={[styles.submitButton, (!descripcion || !ubicacion || imagenes.length === 0) && styles.submitButtonDisabled]} 
-          onPress={subirReporte} 
-          disabled={cargando || !descripcion || !ubicacion || imagenes.length === 0}
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            (!descripcion || !ubicacion || imagenes.length === 0) &&
+              styles.submitButtonDisabled,
+          ]}
+          onPress={subirReporte}
+          disabled={
+            cargando || !descripcion || !ubicacion || imagenes.length === 0
+          }
         >
           <Text style={styles.submitButtonText}>
             {cargando ? "Enviando..." : "Enviar Reporte"}
           </Text>
         </TouchableOpacity>
 
-        {cargando && <ActivityIndicator size="large" color="#3498db" style={styles.loadingIndicator} />}
+        {cargando && (
+          <ActivityIndicator
+            size="large"
+            color="#3498db"
+            style={styles.loadingIndicator}
+          />
+        )}
       </ScrollView>
 
       {/* Modal para visualizar la imagen seleccionada */}
@@ -273,12 +306,12 @@ export default function ReportScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Image 
-                source={{ uri: imagenSeleccionada }} 
-                style={styles.modalImage} 
+              <Image
+                source={{ uri: imagenSeleccionada }}
+                style={styles.modalImage}
                 resizeMode="contain"
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeModalButton}
                 onPress={() => setImagenSeleccionada(null)}
               >

@@ -33,10 +33,10 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    photoURL: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    photoURL: "",
   });
 
   const [reportes, setReportes] = useState([]);
@@ -68,21 +68,21 @@ const HomeScreen = ({ navigation }) => {
         if (userDoc.exists()) {
           const data = userDoc.data();
           setUserInfo({
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            email: data.email || '',
-            photoURL: data.photoURL || '',
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            email: data.email || "",
+            photoURL: data.photoURL || "",
           });
         }
       }
     };
     fetchUserData();
   }, []);
-  
+
   const requestPermission = async (permissionType) => {
-    if (permissionType === 'camera') {
+    if (permissionType === "camera") {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         Alert.alert(
           "Permiso denegado",
           "Se necesita permiso para acceder a la cámara",
@@ -91,8 +91,9 @@ const HomeScreen = ({ navigation }) => {
         return false;
       }
     } else {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
         Alert.alert(
           "Permiso denegado",
           "Se necesita permiso para acceder a la galería",
@@ -105,7 +106,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const pickImage = async () => {
-    const hasPermission = await requestPermission('media');
+    const hasPermission = await requestPermission("media");
     if (!hasPermission) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -122,7 +123,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const takePhoto = async () => {
-    const hasPermission = await requestPermission('camera');
+    const hasPermission = await requestPermission("camera");
     if (!hasPermission) return;
 
     const result = await ImagePicker.launchCameraAsync({
@@ -140,20 +141,32 @@ const HomeScreen = ({ navigation }) => {
   const uploadProfileImage = async (uri) => {
     setUploadingPhoto(true);
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      
-      const userId = auth.currentUser.uid;
-      const fileName = `profilePicture_${userId}_${Date.now()}`;
-      const imageRef = ref(storage, `profilePictures/${fileName}.jpg`);
+      const formData = new FormData();
+      formData.append("file", {
+        uri,
+        type: "image/jpeg",
+        name: "profile.jpg",
+      });
+      formData.append("upload_preset", "reportes");
 
-      // Subir la imagen
-      await uploadBytes(imageRef, blob);
-      
-      // Obtener la URL
-      const url = await getDownloadURL(imageRef);
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dd3y0fvce/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.secure_url) {
+        throw new Error("No se recibió la URL segura de la imagen");
+      }
+
+      const url = data.secure_url;
 
       // Actualizar Firestore
+      const userId = auth.currentUser.uid;
       await updateDoc(doc(db, "users", userId), {
         photoURL: url,
       });
@@ -161,11 +174,8 @@ const HomeScreen = ({ navigation }) => {
       setUserInfo((prev) => ({ ...prev, photoURL: url }));
       Alert.alert("Éxito", "Foto de perfil actualizada correctamente");
     } catch (error) {
-      console.error("Error al subir imagen:", error);
-      Alert.alert(
-        "Error al subir foto", 
-        "No se pudo actualizar la foto de perfil. Por favor, inténtalo de nuevo."
-      );
+      console.error("Error al subir imagen a Cloudinary:", error);
+      Alert.alert("Error", "No se pudo subir la imagen. Intenta de nuevo.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -173,14 +183,20 @@ const HomeScreen = ({ navigation }) => {
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
-    if (timestamp.seconds) return new Date(timestamp.seconds * 1000).toLocaleString();
-    if (timestamp.toDate && typeof timestamp.toDate === 'function') return timestamp.toDate().toLocaleString();
+    if (timestamp.seconds)
+      return new Date(timestamp.seconds * 1000).toLocaleString();
+    if (timestamp.toDate && typeof timestamp.toDate === "function")
+      return timestamp.toDate().toLocaleString();
     if (timestamp instanceof Date) return timestamp.toLocaleString();
     return "Fecha no disponible";
   };
 
   useEffect(() => {
-    const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"), limit(5));
+    const q = query(
+      collection(db, "reportes"),
+      orderBy("creadoEn", "desc"),
+      limit(5)
+    );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const reportesData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -190,7 +206,9 @@ const HomeScreen = ({ navigation }) => {
       const nuevasNotificaciones = reportesData.map((reporte) => ({
         id: reporte.id,
         title: "Nuevo Reporte",
-        body: reporte.descripcion ? reporte.descripcion.substring(0, 50) + "..." : "Sin descripción",
+        body: reporte.descripcion
+          ? reporte.descripcion.substring(0, 50) + "..."
+          : "Sin descripción",
         time: formatTimestamp(reporte.creadoEn),
         leido: false,
         isNew: true,
@@ -211,12 +229,16 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleNotificationPress = (reportId) => {
-    setNotificaciones((prev) => prev.map((notif) =>
-      notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-    ));
-    setAllNotificaciones((prev) => prev.map((notif) =>
-      notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-    ));
+    setNotificaciones((prev) =>
+      prev.map((notif) =>
+        notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+      )
+    );
+    setAllNotificaciones((prev) =>
+      prev.map((notif) =>
+        notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+      )
+    );
     setModalVisible(false);
     navigation.navigate("ReporteDetalle", { reportId });
   };
@@ -233,7 +255,9 @@ const HomeScreen = ({ navigation }) => {
       const todasLasNotificaciones = reportesData.map((reporte, index) => ({
         id: reporte.id,
         title: "Reporte",
-        body: reporte.descripcion ? reporte.descripcion.substring(0, 50) + "..." : "Sin descripción",
+        body: reporte.descripcion
+          ? reporte.descripcion.substring(0, 50) + "..."
+          : "Sin descripción",
         time: formatTimestamp(reporte.creadoEn),
         leido: false,
         isNew: index < 5,
@@ -250,11 +274,18 @@ const HomeScreen = ({ navigation }) => {
   const renderNotificationItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => handleNotificationPress(item.id)}
-      style={[styles.notificationItem, item.isNew && styles.newNotificationItem]}
+      style={[
+        styles.notificationItem,
+        item.isNew && styles.newNotificationItem,
+      ]}
     >
       <View style={styles.notificationHeader}>
         <Text style={styles.notificationText}>{item.title}</Text>
-        {item.isNew && <View style={styles.newBadge}><Text style={styles.newBadgeText}>Nuevo</Text></View>}
+        {item.isNew && (
+          <View style={styles.newBadge}>
+            <Text style={styles.newBadgeText}>Nuevo</Text>
+          </View>
+        )}
       </View>
       <Text style={styles.notificationBody}>{item.body}</Text>
       <Text style={styles.notificationTime}>{item.time}</Text>
@@ -275,7 +306,7 @@ const HomeScreen = ({ navigation }) => {
         {cantidadNotificaciones > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {cantidadNotificaciones > 9 ? '9+' : cantidadNotificaciones}
+              {cantidadNotificaciones > 9 ? "9+" : cantidadNotificaciones}
             </Text>
           </View>
         )}
@@ -294,27 +325,43 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>
-              {viewingAllNotifications ? "Todas las Notificaciones" : "Notificaciones Recientes"}
+              {viewingAllNotifications
+                ? "Todas las Notificaciones"
+                : "Notificaciones Recientes"}
             </Text>
             {loading ? (
-              <ActivityIndicator size="large" color="#2563eb" style={styles.loadingIndicator} />
+              <ActivityIndicator
+                size="large"
+                color="#2563eb"
+                style={styles.loadingIndicator}
+              />
             ) : (
               <FlatList
-                data={viewingAllNotifications ? allNotificaciones : notificaciones}
+                data={
+                  viewingAllNotifications ? allNotificaciones : notificaciones
+                }
                 renderItem={renderNotificationItem}
                 keyExtractor={(item) => item.id}
                 style={styles.notificationList}
               />
             )}
             {!viewingAllNotifications && (
-              <TouchableOpacity onPress={fetchAllNotifications} style={styles.viewAllButton}>
-                <Text style={styles.viewAllButtonText}>Ver todas las notificaciones</Text>
+              <TouchableOpacity
+                onPress={fetchAllNotifications}
+                style={styles.viewAllButton}
+              >
+                <Text style={styles.viewAllButtonText}>
+                  Ver todas las notificaciones
+                </Text>
               </TouchableOpacity>
             )}
-            <TouchableHighlight style={styles.closeButton} onPress={() => {
-              setModalVisible(false);
-              setViewingAllNotifications(false);
-            }}>
+            <TouchableHighlight
+              style={styles.closeButton}
+              onPress={() => {
+                setModalVisible(false);
+                setViewingAllNotifications(false);
+              }}
+            >
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableHighlight>
           </View>
@@ -331,19 +378,29 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.modalBackground}>
           <View style={styles.photoModalContainer}>
             <Text style={styles.modalTitle}>Cambiar Foto de Perfil</Text>
-            
+
             <TouchableOpacity style={styles.photoOption} onPress={takePhoto}>
-              <FontAwesome5 name="camera" size={24} color="#2563eb" style={styles.photoOptionIcon} />
+              <FontAwesome5
+                name="camera"
+                size={24}
+                color="#2563eb"
+                style={styles.photoOptionIcon}
+              />
               <Text style={styles.photoOptionText}>Tomar una foto</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.photoOption} onPress={pickImage}>
-              <FontAwesome5 name="image" size={24} color="#2563eb" style={styles.photoOptionIcon} />
+              <FontAwesome5
+                name="image"
+                size={24}
+                color="#2563eb"
+                style={styles.photoOptionIcon}
+              />
               <Text style={styles.photoOptionText}>Elegir de la galería</Text>
             </TouchableOpacity>
-            
-            <TouchableHighlight 
-              style={styles.cancelButton} 
+
+            <TouchableHighlight
+              style={styles.cancelButton}
               onPress={() => setPhotoModalVisible(false)}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -357,7 +414,7 @@ const HomeScreen = ({ navigation }) => {
       </Animated.View>
 
       <View style={styles.userInfoCard}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.profileImageContainer}
           onPress={() => setPhotoModalVisible(true)}
         >
@@ -366,7 +423,10 @@ const HomeScreen = ({ navigation }) => {
               <ActivityIndicator size="large" color="#2563eb" />
             </View>
           ) : userInfo.photoURL ? (
-            <Image source={{ uri: userInfo.photoURL }} style={styles.profileImage} />
+            <Image
+              source={{ uri: userInfo.photoURL }}
+              style={styles.profileImage}
+            />
           ) : (
             <FontAwesome5 name="user-circle" size={80} color="#aaa" />
           )}
@@ -379,9 +439,11 @@ const HomeScreen = ({ navigation }) => {
             ? `${userInfo.firstName} ${userInfo.lastName}`
             : "Nombre no disponible"}
         </Text>
-        <Text style={styles.email}>{userInfo.email || "Correo no disponible"}</Text>
-        <TouchableOpacity 
-          style={styles.changePhotoButton} 
+        <Text style={styles.email}>
+          {userInfo.email || "Correo no disponible"}
+        </Text>
+        <TouchableOpacity
+          style={styles.changePhotoButton}
           onPress={() => setPhotoModalVisible(true)}
           disabled={uploadingPhoto}
         >
@@ -391,12 +453,18 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.cameraButton} onPress={() => navigation.navigate('Takephoto')}>
-        <Text style={styles.cameraButtonText}>📷 Tomar Foto</Text>
+      <TouchableOpacity
+        style={styles.cameraButton}
+        onPress={() => navigation.navigate("Takephoto")}
+      >
+        <Text style={styles.cameraButtonText}>Crear reporte</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.reportsButton} onPress={() => navigation.navigate('Reportes')}>
-        <Text style={styles.reportsButtonText}>📄 Ver Reportes Enviados</Text>
+      <TouchableOpacity
+        style={styles.reportsButton}
+        onPress={() => navigation.navigate("Reportes")}
+      >
+        <Text style={styles.reportsButtonText}>Ver Reportes Enviados</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -410,14 +478,14 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
   profileImageContainer: {
-    position: 'relative',
+    position: "relative",
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
   },
   profileImage: {
     width: 100,
@@ -425,25 +493,25 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   cameraIconOverlay: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     bottom: 0,
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
     width: 30,
     height: 30,
     borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   loadingImageContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   photoModalContainer: {
     backgroundColor: "white",
@@ -452,18 +520,18 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   photoOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   photoOptionIcon: {
     marginRight: 15,
   },
   photoOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   cancelButton: {
     marginTop: 15,
@@ -495,13 +563,13 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   notificationBell: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     right: 25,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 50,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
@@ -509,21 +577,21 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: 4,
     right: 4,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 1,
     minWidth: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   badgeText: {
-    color: 'white',
+    color: "white",
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalBackground: {
     flex: 1,
@@ -639,25 +707,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   userInfoCard: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 16,
     marginBottom: 24,
-    width: '85%',
-    shadowColor: '#000',
+    width: "85%",
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
   },
   name: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 10,
   },
   email: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 4,
   },
   cameraButton: {

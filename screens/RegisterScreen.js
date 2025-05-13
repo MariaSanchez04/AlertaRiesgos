@@ -55,11 +55,11 @@ export default function RegisterScreen({ navigation }) {
       }
     } catch (err) {
       console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
+      if (err.code === "auth/email-already-in-use") {
         setError("Este correo ya está registrado");
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (err.code === "auth/invalid-email") {
         setError("Formato de correo inválido");
-      } else if (err.code === 'auth/weak-password') {
+      } else if (err.code === "auth/weak-password") {
         setError("La contraseña es demasiado débil");
       } else {
         setError("Error al crear la cuenta. Intenta nuevamente");
@@ -116,8 +116,20 @@ export default function RegisterScreen({ navigation }) {
         autoCapitalize="none"
       />
 
-      {renderPasswordInput(password, setPassword, showPassword, setShowPassword, "Contraseña")}
-      {renderPasswordInput(confirmPassword, setConfirmPassword, showConfirmPassword, setShowConfirmPassword, "Confirmar contraseña")}
+      {renderPasswordInput(
+        password,
+        setPassword,
+        showPassword,
+        setShowPassword,
+        "Contraseña"
+      )}
+      {renderPasswordInput(
+        confirmPassword,
+        setConfirmPassword,
+        showConfirmPassword,
+        setShowConfirmPassword,
+        "Confirmar contraseña"
+      )}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../src/config/firebaseConfig";
@@ -34,14 +41,17 @@ export default function ReporteDetalle() {
   }, [reportId]);
 
   if (cargando) {
-    return <ActivityIndicator size="large" color="blue" style={{ marginTop: 50 }} />;
+    return (
+      <ActivityIndicator size="large" color="blue" style={{ marginTop: 50 }} />
+    );
   }
 
   if (!reporte) {
     return <Text style={styles.mensajeError}>No se encontró el reporte.</Text>;
   }
 
-  const imagenes = reporte.imagenesUrls || (reporte.imagenUrl ? [reporte.imagenUrl] : []);
+  const imagenes =
+    reporte.imagenesUrls || (reporte.imagenUrl ? [reporte.imagenUrl] : []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -56,7 +66,9 @@ export default function ReporteDetalle() {
         />
       ))}
 
-      <Text style={styles.descripcion}>{reporte.descripcion || "Sin descripción"}</Text>
+      <Text style={styles.descripcion}>
+        {reporte.descripcion || "Sin descripción"}
+      </Text>
 
       {reporte.latitud && reporte.longitud ? (
         <MapView
@@ -68,7 +80,12 @@ export default function ReporteDetalle() {
             longitudeDelta: 0.005,
           }}
         >
-          <Marker coordinate={{ latitude: reporte.latitud, longitude: reporte.longitud }} />
+          <Marker
+            coordinate={{
+              latitude: reporte.latitud,
+              longitude: reporte.longitud,
+            }}
+          />
         </MapView>
       ) : (
         <Text style={styles.ubicacion}>Ubicación no disponible</Text>
@@ -76,7 +93,9 @@ export default function ReporteDetalle() {
 
       <Text style={styles.fecha}>
         {reporte.creadoEn
-          ? `Publicado el ${moment(reporte.creadoEn.toDate()).format("DD/MM/YYYY hh:mm A")}`
+          ? `Publicado el ${moment(reporte.creadoEn.toDate()).format(
+              "DD/MM/YYYY hh:mm A"
+            )}`
           : "Fecha no disponible"}
       </Text>
     </ScrollView>

@@ -60,11 +60,17 @@ export default function ReportListScreen() {
   const closeImageModal = () => setModalVisible(false);
 
   if (cargando) {
-    return <ActivityIndicator size="large" color="blue" style={styles.loading} />;
+    return (
+      <ActivityIndicator size="large" color="blue" style={styles.loading} />
+    );
   }
 
   if (filteredReportes.length === 0) {
-    return <Text style={styles.noReports}>No hay reportes que coincidan con la búsqueda.</Text>;
+    return (
+      <Text style={styles.noReports}>
+        No hay reportes que coincidan con la búsqueda.
+      </Text>
+    );
   }
 
   return (
@@ -80,12 +86,17 @@ export default function ReportListScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => {
-          const imagenes = item.imagenesUrls || (item.imagenUrl ? [item.imagenUrl] : []);
+          const imagenes =
+            item.imagenesUrls || (item.imagenUrl ? [item.imagenUrl] : []);
           return (
             <View style={styles.reportCard}>
               {imagenes.length > 0 && (
                 <TouchableOpacity onPress={() => openImageModal(imagenes, 0)}>
-                  <Image source={{ uri: imagenes[0] }} style={styles.image} resizeMode="cover" />
+                  <Image
+                    source={{ uri: imagenes[0] }}
+                    style={styles.image}
+                    resizeMode="cover"
+                  />
                   {imagenes.length > 1 && (
                     <Text style={styles.moreImagesText}>Ver más imágenes</Text>
                   )}
@@ -106,7 +117,12 @@ export default function ReportListScreen() {
                   scrollEnabled={false}
                   zoomEnabled={false}
                 >
-                  <Marker coordinate={{ latitude: item.latitud, longitude: item.longitud }} />
+                  <Marker
+                    coordinate={{
+                      latitude: item.latitud,
+                      longitude: item.longitud,
+                    }}
+                  />
                 </MapView>
               ) : (
                 <Text style={styles.locationText}>Ubicación no disponible</Text>
@@ -114,7 +130,9 @@ export default function ReportListScreen() {
 
               <Text style={styles.fechaTexto}>
                 {item.creadoEn
-                  ? `Publicado el ${moment(item.creadoEn.toDate()).format("DD/MM/YYYY hh:mm A")}`
+                  ? `Publicado el ${moment(item.creadoEn.toDate()).format(
+                      "DD/MM/YYYY hh:mm A"
+                    )}`
                   : "Fecha no disponible"}
               </Text>
             </View>
@@ -129,12 +147,19 @@ export default function ReportListScreen() {
             <ScrollView contentContainerStyle={styles.verticalModalContent}>
               {selectedImages.map((url, index) => (
                 <View key={index} style={styles.modalImageContainer}>
-                  <Image source={{ uri: url }} style={styles.modalImage} resizeMode="contain" />
+                  <Image
+                    source={{ uri: url }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                  />
                 </View>
               ))}
             </ScrollView>
 
-            <TouchableOpacity onPress={closeImageModal} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={closeImageModal}
+              style={styles.closeButton}
+            >
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>
           </View>

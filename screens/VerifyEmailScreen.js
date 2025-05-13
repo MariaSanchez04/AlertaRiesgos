@@ -12,7 +12,9 @@ import { auth } from "../src/config/firebaseConfig";
 import { sendEmailVerification, onAuthStateChanged } from "firebase/auth";
 
 const VerifyEmailScreen = ({ navigation }) => {
-  const [emailVerified, setEmailVerified] = useState(auth.currentUser?.emailVerified);
+  const [emailVerified, setEmailVerified] = useState(
+    auth.currentUser?.emailVerified
+  );
   const [loading, setLoading] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -36,7 +38,10 @@ const VerifyEmailScreen = ({ navigation }) => {
       setSendingEmail(true);
       try {
         await sendEmailVerification(auth.currentUser);
-        Alert.alert("Correo enviado", "Revisa tu bandeja de entrada nuevamente.");
+        Alert.alert(
+          "Correo enviado",
+          "Revisa tu bandeja de entrada nuevamente."
+        );
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "No se pudo enviar el correo. Intenta más tarde.");
@@ -69,9 +74,15 @@ const VerifyEmailScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Verifica tu correo electrónico</Text>
-      <Text style={styles.subtitle}>Hemos enviado un correo a tu bandeja de entrada.</Text>
+      <Text style={styles.subtitle}>
+        Hemos enviado un correo a tu bandeja de entrada.
+      </Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleResendEmail} disabled={sendingEmail}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleResendEmail}
+        disabled={sendingEmail}
+      >
         {sendingEmail ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -79,7 +90,11 @@ const VerifyEmailScreen = ({ navigation }) => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.outlineButton} onPress={handleCheckVerification} disabled={loading}>
+      <TouchableOpacity
+        style={styles.outlineButton}
+        onPress={handleCheckVerification}
+        disabled={loading}
+      >
         {loading ? (
           <ActivityIndicator color="#0370b7" />
         ) : (
