@@ -10,15 +10,17 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Alert,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { db } from "../src/config/firebaseConfig";
+import { db, auth, getUserData } from "../src/config/firebaseConfig";
 import {
   collection,
   getDocs,
   query,
   orderBy,
   doc,
+  deleteDoc,
   updateDoc,
 } from "firebase/firestore";
 import moment from "moment";
@@ -34,8 +36,21 @@ export default function ReportListScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedReporte, setSelectedReporte] = useState(null);
   const [editDescripcion, setEditDescripcion] = useState("");
+  const [userRole, setUserRole] = useState(""); // Nuevo estado para el rol del usuario
 
   useEffect(() => {
+    const obtenerDatosUsuario = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const userData = await getUserData(user.uid);
+          setUserRole(userData?.role || ""); // Guardar el rol del usuario
+        }
+      } catch (error) {
+        console.error("Error al obtener datos del usuario:", error);
+      }
+    };
+
     const obtenerReportes = async () => {
       try {
         const reportesRef = collection(db, "reportes");
@@ -53,7 +68,8 @@ export default function ReportListScreen() {
       }
     };
 
-    obtenerReportes();
+    obtenerDatosUsuario(); // Obtener el rol del usuario
+    obtenerReportes(); // Obtener los reportes
   }, []);
 
   const handleSearch = (term) => setSearchTerm(term);
@@ -102,6 +118,17 @@ export default function ReportListScreen() {
       closeEditModal();
     } catch (error) {
       console.error("Error al actualizar reporte:", error);
+    }
+  };
+
+  const eliminarReporte = async (reporteId) => {
+    try {
+      await deleteDoc(doc(db, "reportes", reporteId)); // Eliminar el reporte de Firestore
+      setReportes((prev) => prev.filter((r) => r.id !== reporteId)); // Actualizar la lista local
+      Alert.alert("Éxito", "Reporte eliminado correctamente.");
+    } catch (error) {
+      console.error("Error al eliminar el reporte:", error);
+      Alert.alert("Error", "No se pudo eliminar el reporte.");
     }
   };
 
@@ -157,6 +184,25 @@ export default function ReportListScreen() {
               >
                 <Text style={{ color: "blue" }}>Editar</Text>
               </TouchableOpacity>
+
+              {/* Mostrar botón de eliminar solo si el usuario es admin */}
+              {userRole === "admin" && (
+                <TouchableOpacity
+                  style={{ marginTop: 10, alignSelf: "flex-end" }}
+                  onPress={() =>
+                    Alert.alert(
+                      "Confirmar eliminación",
+                      `¿Estás seguro de que deseas eliminar este reporte?`,
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        { text: "Eliminar", onPress: () => eliminarReporte(item.id) },
+                      ]
+                    )
+                  }
+                >
+                  <Text style={{ color: "red" }}>Eliminar</Text>
+                </TouchableOpacity>
+              )}
 
               {item.latitud && item.longitud ? (
                 <MapView

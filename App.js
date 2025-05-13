@@ -6,7 +6,8 @@ import RegisterScreen from "./screens/RegisterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import TakePhotoAndUpload from "./screens/TakePhotoAndUpload";
 import ReportListScreen from "./screens/ReportListScreen";
-import ReporteDetalle from "./screens/ReporteDetalle"; // ✅ Asegúrate que la ruta y nombre del archivo sea correcto
+import ReporteDetalle from "./screens/ReporteDetalle";
+import AdminScreen from "./screens/AdminScreen";
 
 const Stack = createStackNavigator();
 
@@ -40,6 +41,11 @@ export default function App() {
         <Stack.Screen
           name="ReporteDetalle"
           component={ReporteDetalle}
+        />
+        <Stack.Screen
+          name="AdminScreen"
+          component={AdminScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

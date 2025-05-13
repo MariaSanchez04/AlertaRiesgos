@@ -37,6 +37,7 @@ const HomeScreen = ({ navigation }) => {
     lastName: "",
     email: "",
     photoURL: "",
+    role: "", // Agregar el rol del usuario
   });
 
   const [reportes, setReportes] = useState([]);
@@ -72,6 +73,7 @@ const HomeScreen = ({ navigation }) => {
             lastName: data.lastName || "",
             email: data.email || "",
             photoURL: data.photoURL || "",
+            role: data.role || "", // Agregar el rol del usuario
           });
         }
       }
@@ -483,6 +485,16 @@ const handleNotificationPress = (reportId) => {
         <Text style={styles.reportsButtonText}>Ver Reportes Enviados</Text>
       </TouchableOpacity>
 
+      {/* Botón para acceder a AdminScreen */}
+      {userInfo.role === "admin" && ( // Mostrar solo si el rol es "admin"
+        <TouchableOpacity
+          style={styles.adminButton}
+          onPress={() => navigation.navigate("AdminScreen")}
+        >
+          <Text style={styles.adminButtonText}>Panel de Administración</Text>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
       </TouchableOpacity>
@@ -765,6 +777,19 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   reportsButtonText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  adminButton: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    marginTop: 15,
+    elevation: 3,
+  },
+  adminButtonText: {
     fontSize: 16,
     color: "#FFFFFF",
     fontWeight: "bold",
