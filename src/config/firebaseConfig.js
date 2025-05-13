@@ -8,7 +8,13 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getFirestore, setDoc, doc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  setDoc,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { Alert } from "react-native";
 
 // Configuración de Firebase
@@ -32,7 +38,7 @@ const auth = initializeAuth(app, {
 
 const db = getFirestore(app);
 
-// Función para mostrar mensajes
+// Mostrar mensajes de alerta
 export const showMessage = (message) => {
   Alert.alert("Mensaje", message);
 };
@@ -52,7 +58,7 @@ export const getUserData = async (userId) => {
   }
 };
 
-// Registrar usuario
+// Registrar nuevo usuario (rol por defecto: ciudadano)
 export const registerUser = async (email, password, firstName, lastName) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(
@@ -60,11 +66,14 @@ export const registerUser = async (email, password, firstName, lastName) => {
       email,
       password
     );
+
     await setDoc(doc(db, "users", userCredential.user.uid), {
       email,
       firstName,
       lastName,
+      role: "ciudadano", // Rol predeterminado
     });
+
     console.log("Cuenta creada exitosamente");
     return userCredential.user;
   } catch (error) {
@@ -84,6 +93,24 @@ export const registerUser = async (email, password, firstName, lastName) => {
   }
 };
 
+// Asegura que el usuario tenga un rol (para usuarios antiguos)
+export const ensureUserRole = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (!userData.role) {
+        await updateDoc(userRef, { role: "ciudadano" });
+        console.log("Rol asignado automáticamente: ciudadano");
+      }
+    }
+  } catch (error) {
+    console.error("Error al asignar rol predeterminado:", error);
+  }
+};
+
 // Iniciar sesión
 export const loginUser = async (email, password) => {
   try {
@@ -92,8 +119,14 @@ export const loginUser = async (email, password) => {
       email,
       password
     );
+
+    const user = userCredential.user;
+
+    // Asegurar rol si falta
+    await ensureUserRole(user.uid);
+
     console.log("Inicio de sesión exitoso");
-    return userCredential.user;
+    return user;
   } catch (error) {
     console.error("Error en inicio de sesión:", error);
     throw error;
