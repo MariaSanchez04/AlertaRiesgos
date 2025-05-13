@@ -310,7 +310,7 @@ const handleNotificationPress = (reportId) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f7" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffff" />
       <TouchableOpacity
         style={styles.notificationBell}
         onPress={() => {
