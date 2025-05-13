@@ -1,12 +1,29 @@
-import { useState, useEffect } from "react";
-import { View, Text, Button, Image, TextInput, ActivityIndicator, StyleSheet, Alert, ScrollView, TouchableOpacity } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { 
+  View, 
+  Text, 
+  Image, 
+  TextInput, 
+  ActivityIndicator, 
+  StyleSheet, 
+  Alert, 
+  ScrollView, 
+  TouchableOpacity, 
+  Modal, 
+  KeyboardAvoidingView, 
+  Platform,
+  Dimensions
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import * as FileSystem from "expo-file-system";
 import { db } from "../src/config/firebaseConfig";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";  // Asegúrate de importar serverTimestamp
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
+import { configurarNotificaciones, mostrarNotificacion } from "../src/config/notificationsHelper"; // Importa el helper
+
+const screenWidth = Dimensions.get('window').width;
 
 export default function ReportScreen() {
   const [imagenes, setImagenes] = useState([]);
@@ -14,10 +31,10 @@ export default function ReportScreen() {
   const [descripcion, setDescripcion] = useState("");
   const [cargando, setCargando] = useState(false);
   const [ubicacionError, setUbicacionError] = useState(null);
+  const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
 
   const navigation = useNavigation();
 
-  // Obtener ubicación actual
   const obtenerUbicacion = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -28,7 +45,7 @@ export default function ReportScreen() {
     try {
       let ubicacionActual = await Location.getCurrentPositionAsync({});
       setUbicacion(ubicacionActual.coords);
-      setUbicacionError(null); // Reseteamos el error si la ubicación se obtiene correctamente
+      setUbicacionError(null);
     } catch (error) {
       setUbicacionError("Error al obtener la ubicación");
     }
@@ -36,15 +53,15 @@ export default function ReportScreen() {
 
   useEffect(() => {
     obtenerUbicacion();
+    configurarNotificaciones(); // Configura notificaciones al inicio
   }, []);
 
-  // Tomar una foto con la cámara
   const tomarFoto = async () => {
     let resultado = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
     });
 
     if (!resultado.canceled) {
@@ -52,12 +69,11 @@ export default function ReportScreen() {
     }
   };
 
-  // Seleccionar múltiples imágenes desde la galería
   const seleccionarImagenes = async () => {
     let resultado = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
       selectionLimit: 5,
       allowsMultipleSelection: true,
     });
@@ -67,12 +83,10 @@ export default function ReportScreen() {
     }
   };
 
-  // Eliminar una imagen seleccionada
   const eliminarImagen = (uri) => {
     setImagenes(imagenes.filter((img) => img.uri !== uri));
   };
 
-  // Subir reporte con imágenes a Cloudinary
   const subirReporte = async () => {
     if (imagenes.length === 0 || !ubicacion || !descripcion) {
       Alert.alert("Campos incompletos", "Por favor completa todos los campos.");
@@ -84,19 +98,16 @@ export default function ReportScreen() {
     try {
       const urlsImagenes = [];
 
-      // Convertir las imágenes a Base64 y subirlas a Cloudinary
       for (let imagen of imagenes) {
         const base64 = await FileSystem.readAsStringAsync(imagen.uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
 
-        // Crear FormData para subir a Cloudinary
         const formData = new FormData();
         formData.append("file", `data:image/jpeg;base64,${base64}`);
         formData.append("upload_preset", "reportes");
         formData.append("folder", "reportes");
 
-        // Subida de imagen a Cloudinary
         const respuesta = await fetch("https://api.cloudinary.com/v1_1/dd3y0fvce/image/upload", {
           method: "POST",
           body: formData,
@@ -113,21 +124,39 @@ export default function ReportScreen() {
         }
       }
 
-      // Guardar los datos en Firestore con las URLs de Cloudinary
+      // Verificar si los valores de latitud y longitud son correctos antes de agregar el reporte
+      if (!ubicacion.latitude || !ubicacion.longitude) {
+        throw new Error("Ubicación no válida.");
+      }
+
+      // Agregar el reporte a la base de datos
       await addDoc(collection(db, "reportes"), {
         imagenesUrls: urlsImagenes,
         descripcion,
         latitud: ubicacion.latitude,
         longitud: ubicacion.longitude,
-        creadoEn: serverTimestamp(),
+        creadoEn: serverTimestamp(),  // Esto asegura que Firebase maneje el timestamp automáticamente
       });
 
-      Alert.alert("Éxito", "Reporte enviado con éxito");
+      // Mostrar notificación local tras un reporte exitoso
+      await mostrarNotificacion("Nuevo reporte enviado", "Tu reporte fue enviado correctamente.");
+
+      // Mostrar mensaje de éxito con una alerta
+      Alert.alert(
+        "Éxito",
+        "Reporte enviado con éxito ✅",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate('Reportes'), 
+          }
+        ],
+        { cancelable: false }
+      );
+
+      // Reiniciar los campos del formulario
       setImagenes([]);
       setDescripcion("");
-      setUbicacion(null);
-
-      navigation.navigate('Reportes'); // Navegar a la pantalla de reportes
     } catch (error) {
       console.error("Error subiendo el reporte:", error);
       Alert.alert("Error", `Error al subir el reporte: ${error.message}`);
@@ -137,76 +166,141 @@ export default function ReportScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Descripción del Problema</Text>
-      <TextInput
-        value={descripcion}
-        onChangeText={setDescripcion}
-        placeholder="Escribe aquí..."
-        style={styles.input}
-      />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Descripción del Problema</Text>
+        <TextInput
+          value={descripcion}
+          onChangeText={setDescripcion}
+          placeholder="Escribe aquí..."
+          style={styles.input}
+          multiline={true}
+          numberOfLines={4}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={tomarFoto} disabled={cargando}>
-        <Text style={styles.buttonText}>📸 Tomar Foto</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={seleccionarImagenes} disabled={cargando}>
-        <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={tomarFoto} disabled={cargando}>
+          <Text style={styles.buttonText}>📸 Tomar Foto</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={seleccionarImagenes} disabled={cargando}>
+          <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
+        </TouchableOpacity>
 
-      <ScrollView horizontal={true}>
-        {imagenes.map((imagen, index) => (
-          <View key={index} style={styles.imageContainer}>
-            <Image source={{ uri: imagen.uri }} style={styles.image} />
-            <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarImagen(imagen.uri)}>
-              <Text style={styles.deleteButtonText}>Eliminar</Text>
-            </TouchableOpacity>
+        {imagenes.length > 0 && (
+          <View style={styles.imagesSection}>
+            <Text style={styles.imagesTitle}>Imágenes seleccionadas ({imagenes.length})</Text>
+            <ScrollView 
+              horizontal={true} 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.imagesScrollContainer}
+            >
+              {imagenes.map((imagen, index) => (
+                <View key={index} style={styles.imageContainer}>
+                  <TouchableOpacity 
+                    activeOpacity={0.7} 
+                    onPress={() => setImagenSeleccionada(imagen.uri)}
+                  >
+                    <Image 
+                      source={{ uri: imagen.uri }} 
+                      style={styles.image}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.deleteButton} 
+                    onPress={() => eliminarImagen(imagen.uri)}
+                  >
+                    <Text style={styles.deleteButtonText}>❌</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
           </View>
-        ))}
-      </ScrollView>
+        )}
 
-      <Text style={styles.locationLabel}>Ubicación:</Text>
-      {ubicacionError && <Text style={styles.errorText}>{ubicacionError}</Text>}
+        <Text style={styles.locationLabel}>Ubicación:</Text>
+        {ubicacionError && <Text style={styles.errorText}>{ubicacionError}</Text>}
 
-      {ubicacion && !ubicacionError ? (
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: ubicacion.latitude,
-              longitude: ubicacion.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            <Marker
-              coordinate={{
+        {ubicacion && !ubicacionError ? (
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              initialRegion={{
                 latitude: ubicacion.latitude,
                 longitude: ubicacion.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
               }}
-              title="Ubicación del reporte"
-            />
-          </MapView>
-        </View>
-      ) : (
-        <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+            >
+              <Marker
+                coordinate={{
+                  latitude: ubicacion.latitude,
+                  longitude: ubicacion.longitude,
+                }}
+                title="Ubicación del reporte"
+              />
+            </MapView>
+          </View>
+        ) : (
+          <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+        )}
+
+        <TouchableOpacity 
+          style={[styles.submitButton, (!descripcion || !ubicacion || imagenes.length === 0) && styles.submitButtonDisabled]} 
+          onPress={subirReporte} 
+          disabled={cargando || !descripcion || !ubicacion || imagenes.length === 0}
+        >
+          <Text style={styles.submitButtonText}>
+            {cargando ? "Enviando..." : "Enviar Reporte"}
+          </Text>
+        </TouchableOpacity>
+
+        {cargando && <ActivityIndicator size="large" color="#3498db" style={styles.loadingIndicator} />}
+      </ScrollView>
+
+      {/* Modal para visualizar la imagen seleccionada */}
+      {imagenSeleccionada && (
+        <Modal
+          visible={true}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setImagenSeleccionada(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Image 
+                source={{ uri: imagenSeleccionada }} 
+                style={styles.modalImage} 
+                resizeMode="contain"
+              />
+              <TouchableOpacity 
+                style={styles.closeModalButton}
+                onPress={() => setImagenSeleccionada(null)}
+              >
+                <Text style={styles.closeModalText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       )}
-
-      <TouchableOpacity style={styles.submitButton} onPress={subirReporte} disabled={cargando}>
-        <Text style={styles.submitButtonText}>Enviar Reporte</Text>
-      </TouchableOpacity>
-
-      {cargando && <ActivityIndicator size="large" color="#3498db" style={styles.loadingIndicator} />}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#f9fafb",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     padding: 20,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 24,
@@ -227,9 +321,9 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#3498db",
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 15,
     width: "100%",
     alignItems: "center",
   },
@@ -238,24 +332,80 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  imagesSection: {
+    marginVertical: 15,
+  },
+  imagesTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 10,
+    color: "#555",
+  },
+  imagesScrollContainer: {
+    paddingBottom: 10,
+  },
   imageContainer: {
-    margin: 5,
+    marginRight: 12,
+    position: "relative",
   },
   image: {
-    width: 200,
-    height: 200,
+    width: 160,
+    height: 160,
     borderRadius: 8,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#ddd",
   },
   deleteButton: {
-    backgroundColor: "red",
-    padding: 5,
-    borderRadius: 5,
-    marginTop: 5,
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "white",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    elevation: 2,
   },
   deleteButtonText: {
+    fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+  },
+  modalContent: {
+    width: "90%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+  },
+  modalImage: {
+    width: "100%",
+    height: 400,
+    borderRadius: 8,
+  },
+  closeModalButton: {
+    backgroundColor: "#3498db",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 15,
+  },
+  closeModalText: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
   },
   locationLabel: {
     fontSize: 18,
@@ -275,6 +425,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     marginVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   map: {
     flex: 1,
@@ -282,18 +434,23 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: "#888",
+    textAlign: "center",
+    padding: 10,
   },
   submitButton: {
     backgroundColor: "#2ecc71",
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
     marginTop: 20,
     width: "100%",
     alignItems: "center",
   },
+  submitButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
   submitButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
   },
   loadingIndicator: {
