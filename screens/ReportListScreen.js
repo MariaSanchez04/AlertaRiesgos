@@ -13,7 +13,14 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { db } from "../src/config/firebaseConfig";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import moment from "moment";
 
 export default function ReportListScreen() {
@@ -23,6 +30,10 @@ export default function ReportListScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedReporte, setSelectedReporte] = useState(null);
+  const [editDescripcion, setEditDescripcion] = useState("");
 
   useEffect(() => {
     const obtenerReportes = async () => {
@@ -58,6 +69,41 @@ export default function ReportListScreen() {
   };
 
   const closeImageModal = () => setModalVisible(false);
+
+  const openEditModal = (reporte) => {
+    setSelectedReporte(reporte);
+    setEditDescripcion(reporte.descripcion || "");
+    setEditModalVisible(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalVisible(false);
+    setSelectedReporte(null);
+    setEditDescripcion("");
+  };
+
+  const guardarCambios = async () => {
+    if (!selectedReporte) return;
+
+    try {
+      const reporteRef = doc(db, "reportes", selectedReporte.id);
+      await updateDoc(reporteRef, {
+        descripcion: editDescripcion,
+      });
+
+      setReportes((prev) =>
+        prev.map((r) =>
+          r.id === selectedReporte.id
+            ? { ...r, descripcion: editDescripcion }
+            : r
+        )
+      );
+
+      closeEditModal();
+    } catch (error) {
+      console.error("Error al actualizar reporte:", error);
+    }
+  };
 
   if (cargando) {
     return (
@@ -104,6 +150,13 @@ export default function ReportListScreen() {
               )}
 
               <Text style={styles.descripcion}>{item.descripcion}</Text>
+
+              <TouchableOpacity
+                style={{ marginTop: 10, alignSelf: "flex-end" }}
+                onPress={() => openEditModal(item)}
+              >
+                <Text style={{ color: "blue" }}>Editar</Text>
+              </TouchableOpacity>
 
               {item.latitud && item.longitud ? (
                 <MapView
@@ -165,6 +218,39 @@ export default function ReportListScreen() {
           </View>
         </Modal>
       )}
+
+      {/* Modal de edición */}
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.editModalContainer}>
+          <View style={styles.editModalContent}>
+            <Text style={styles.editModalTitle}>Editar descripción</Text>
+            <TextInput
+              style={styles.editInput}
+              multiline
+              value={editDescripcion}
+              onChangeText={setEditDescripcion}
+            />
+            <View style={styles.editButtons}>
+              <TouchableOpacity
+                onPress={closeEditModal}
+                style={styles.cancelButton}
+              >
+                <Text style={{ color: "white" }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={guardarCambios}
+                style={styles.saveButton}
+              >
+                <Text style={{ color: "white" }}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -270,5 +356,46 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     fontSize: 18,
+  },
+  editModalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  editModalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+  },
+  editModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  editInput: {
+    height: 100,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    textAlignVertical: "top",
+  },
+  editButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 15,
+  },
+  cancelButton: {
+    backgroundColor: "#888",
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  saveButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 8,
   },
 });

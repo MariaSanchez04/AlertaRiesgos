@@ -203,18 +203,32 @@ const HomeScreen = ({ navigation }) => {
         ...doc.data(),
       }));
       setReportes(reportesData);
-      const nuevasNotificaciones = reportesData.map((reporte) => ({
-        id: reporte.id,
-        title: "Nuevo Reporte",
-        body: reporte.descripcion
-          ? reporte.descripcion.substring(0, 50) + "..."
-          : "Sin descripción",
-        time: formatTimestamp(reporte.creadoEn),
-        leido: false,
-        isNew: true,
-      }));
+
+      const ahora = new Date();
+      const unaHoraAntes = new Date(ahora.getTime() - 60 * 60 * 1000); // 1 hora
+
+      const nuevasNotificaciones = reportesData
+        .filter((reporte) => {
+          const creadoEn =
+            reporte.creadoEn?.toDate?.() ??
+            new Date(reporte.creadoEn?.seconds * 1000);
+          return creadoEn > unaHoraAntes;
+        })
+        .map((reporte) => ({
+          id: reporte.id,
+          title: "Nuevo Reporte",
+          body: reporte.descripcion
+            ? reporte.descripcion.substring(0, 50) + "..."
+            : "Sin descripción",
+          time: formatTimestamp(reporte.creadoEn),
+          leido: false,
+          isNew: true,
+        }));
+
       setNotificaciones(nuevasNotificaciones);
-      setCantidadNotificaciones(nuevasNotificaciones.length);
+      setCantidadNotificaciones(
+        nuevasNotificaciones.filter((n) => !n.leido).length
+      );
     });
     return () => unsubscribe();
   }, [db]);
@@ -228,20 +242,22 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleNotificationPress = (reportId) => {
-    setNotificaciones((prev) =>
-      prev.map((notif) =>
-        notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-      )
-    );
-    setAllNotificaciones((prev) =>
-      prev.map((notif) =>
-        notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-      )
-    );
-    setModalVisible(false);
-    navigation.navigate("ReporteDetalle", { reportId });
-  };
+const handleNotificationPress = (reportId) => {
+  const updated = notificaciones.map((notif) =>
+    notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+  );
+  setNotificaciones(updated);
+  setCantidadNotificaciones(updated.filter(n => !n.leido).length);
+
+  const updatedAll = allNotificaciones.map((notif) =>
+    notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+  );
+  setAllNotificaciones(updatedAll);
+
+  setModalVisible(false);
+  navigation.navigate("ReporteDetalle", { reportId });
+};
+
 
   const fetchAllNotifications = async () => {
     setLoading(true);
