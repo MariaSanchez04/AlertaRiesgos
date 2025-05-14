@@ -18,13 +18,14 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import * as FileSystem from "expo-file-system";
 import { db } from "../src/config/firebaseConfig";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Asegúrate de importar serverTimestamp
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import {
   configurarNotificaciones,
   mostrarNotificacion,
-} from "../src/config/notificationsHelper"; // Importa el helper
+} from "../src/config/notificationsHelper";
+import { getAuth } from "firebase/auth"; // ✅ Importar auth
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -56,7 +57,7 @@ export default function ReportScreen() {
 
   useEffect(() => {
     obtenerUbicacion();
-    configurarNotificaciones(); // Configura notificaciones al inicio
+    configurarNotificaciones();
   }, []);
 
   const tomarFoto = async () => {
@@ -120,7 +121,6 @@ export default function ReportScreen() {
         );
 
         if (!respuesta.ok) {
-          const errorData = await respuesta.json();
           throw new Error("Error al subir la imagen a Cloudinary.");
         }
 
@@ -130,30 +130,31 @@ export default function ReportScreen() {
         }
       }
 
-      // Verificar si los valores de latitud y longitud son correctos antes de agregar el reporte
+      const auth = getAuth(); // ✅ Obtener el auth
+      const user = auth.currentUser;
+      const correoUsuario = user?.email || "Desconocido";
+
       if (!ubicacion.latitude || !ubicacion.longitude) {
         throw new Error("Ubicación no válida.");
       }
 
-      // Agregar el reporte a la base de datos
       await addDoc(collection(db, "reportes"), {
         imagenesUrls: urlsImagenes,
         descripcion,
         latitud: ubicacion.latitude,
         longitud: ubicacion.longitude,
-        creadoEn: serverTimestamp(), // Esto asegura que Firebase maneje el timestamp automáticamente
+        creadoEn: serverTimestamp(),
+        correo: correoUsuario, // ✅ Agregar correo a la base de datos
       });
 
-      // Mostrar notificación local tras un reporte exitoso
       await mostrarNotificacion(
         "Nuevo reporte enviado",
         "Tu reporte fue enviado correctamente."
       );
 
-      // Mostrar mensaje de éxito con una alerta
       Alert.alert(
         "Éxito",
-        "Reporte enviado con éxito ✅",
+        `Reporte enviado con éxito ✅\nCorreo del usuario: ${correoUsuario}`,
         [
           {
             text: "OK",
@@ -163,7 +164,6 @@ export default function ReportScreen() {
         { cancelable: false }
       );
 
-      // Reiniciar los campos del formulario
       setImagenes([]);
       setDescripcion("");
     } catch (error) {

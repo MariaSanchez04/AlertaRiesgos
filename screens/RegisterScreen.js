@@ -39,6 +39,13 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
+    // Validación de correo electrónico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, ingresa un correo electrónico válido");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 

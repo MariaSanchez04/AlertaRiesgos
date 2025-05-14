@@ -23,6 +23,7 @@ export default function AdminScreen({ navigation }) {
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -87,6 +88,7 @@ export default function AdminScreen({ navigation }) {
     setEditFirstName(user.firstName || "");
     setEditLastName(user.lastName || "");
     setEditRole(user.role || "ciudadano");
+    setIsBlocked(user.blocked || false); // Setea el estado del bloqueo
     setEditModalVisible(true);
   };
 
@@ -96,6 +98,7 @@ export default function AdminScreen({ navigation }) {
     setEditFirstName("");
     setEditLastName("");
     setEditRole("");
+    setIsBlocked(false); // Reinicia el estado del bloqueo
   };
 
   const saveChanges = async () => {
@@ -107,12 +110,13 @@ export default function AdminScreen({ navigation }) {
         firstName: editFirstName,
         lastName: editLastName,
         role: editRole,
+        blocked: isBlocked, // Se incluye el estado de bloqueo
       });
 
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === selectedUser.id
-            ? { ...user, firstName: editFirstName, lastName: editLastName, role: editRole }
+            ? { ...user, firstName: editFirstName, lastName: editLastName, role: editRole, blocked: isBlocked }
             : user
         )
       );
@@ -145,14 +149,16 @@ export default function AdminScreen({ navigation }) {
         renderItem={({ item }) => (
           <View style={styles.userItem}>
             <Text style={styles.userText}>
-              <Text style={styles.boldText}>Nombre:</Text> {item.firstName}{" "}
-              {item.lastName}
+              <Text style={styles.boldText}>Nombre:</Text> {item.firstName} {item.lastName}
             </Text>
             <Text style={styles.userText}>
               <Text style={styles.boldText}>Correo:</Text> {item.email}
             </Text>
             <Text style={styles.userText}>
               <Text style={styles.boldText}>Rol:</Text> {item.role}
+            </Text>
+            <Text style={styles.userText}>
+              <Text style={styles.boldText}>Estado:</Text> {item.blocked ? "Bloqueado" : "Activo"}
             </Text>
             <TouchableOpacity
               style={styles.editButton}
@@ -205,6 +211,17 @@ export default function AdminScreen({ navigation }) {
               <Picker.Item label="Ciudadano" value="ciudadano" />
               <Picker.Item label="Admin" value="admin" />
             </Picker>
+            <View style={styles.blockContainer}>
+              <Text style={styles.label}>Bloquear Usuario</Text>
+              <Picker
+                selectedValue={isBlocked ? "bloqueado" : "activo"}
+                onValueChange={(itemValue) => setIsBlocked(itemValue === "bloqueado")}
+                style={styles.picker}
+              >
+                <Picker.Item label="Activo" value="activo" />
+                <Picker.Item label="Bloqueado" value="bloqueado" />
+              </Picker>
+            </View>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.cancelButton} onPress={closeEditModal}>
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -317,6 +334,9 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
+    marginBottom: 15,
+  },
+  blockContainer: {
     marginBottom: 15,
   },
   modalButtons: {

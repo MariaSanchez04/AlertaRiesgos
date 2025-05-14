@@ -8,6 +8,7 @@ import TakePhotoAndUpload from "./screens/TakePhotoAndUpload";
 import ReportListScreen from "./screens/ReportListScreen";
 import ReporteDetalle from "./screens/ReporteDetalle";
 import AdminScreen from "./screens/AdminScreen";
+import PerfilScreen from "./screens/PerfilScreen";
 
 const Stack = createStackNavigator();
 
@@ -46,6 +47,11 @@ export default function App() {
           name="AdminScreen"
           component={AdminScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Perfil"
+          component={PerfilScreen}
+          options={{ title: "Perfil del Usuario" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

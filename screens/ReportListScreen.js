@@ -20,6 +20,7 @@ import {
   query,
   orderBy,
   doc,
+  getDoc,
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
@@ -56,10 +57,21 @@ export default function ReportListScreen() {
         const reportesRef = collection(db, "reportes");
         const q = query(reportesRef, orderBy("creadoEn", "desc"));
         const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        
+        const data = await Promise.all(querySnapshot.docs.map(async (doc) => {
+          const reporteData = doc.data();
+          // Obtener los datos del usuario asociado
+          const usuarioRef = doc(db, "usuarios", reporteData.usuarioId);
+          const usuarioSnapshot = await getDoc(usuarioRef);
+          const usuarioData = usuarioSnapshot.data();
+
+          return {
+            id: doc.id,
+            ...reporteData,
+            correoUsuario: usuarioData?.correo || "Correo no disponible",
+          };
         }));
+        
         setReportes(data);
       } catch (error) {
         console.error("Error al obtener reportes:", error);
@@ -178,12 +190,22 @@ export default function ReportListScreen() {
 
               <Text style={styles.descripcion}>{item.descripcion}</Text>
 
-              <TouchableOpacity
-                style={{ marginTop: 10, alignSelf: "flex-end" }}
-                onPress={() => openEditModal(item)}
-              >
-                <Text style={{ color: "blue" }}>Editar</Text>
-              </TouchableOpacity>
+              {userRole === "admin" && (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ fontSize: 14, color: "#555" }}>
+                    Subido por: {item.correoUsuario || "Correo no disponible"}
+                  </Text>
+                </View>
+              )}
+
+              {userRole === "admin" && (
+                <TouchableOpacity
+                  style={{ marginTop: 10, alignSelf: "flex-end" }}
+                  onPress={() => openEditModal(item)}
+                >
+                  <Text style={{ color: "blue" }}>Editar</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Mostrar botón de eliminar solo si el usuario es admin */}
               {userRole === "admin" && (
@@ -230,8 +252,8 @@ export default function ReportListScreen() {
               <Text style={styles.fechaTexto}>
                 {item.creadoEn
                   ? `Publicado el ${moment(item.creadoEn.toDate()).format(
-                      "DD/MM/YYYY hh:mm A"
-                    )}`
+                    "DD/MM/YYYY hh:mm A"
+                  )}`
                   : "Fecha no disponible"}
               </Text>
             </View>

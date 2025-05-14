@@ -11,6 +11,8 @@ import {
 import { Ionicons } from "@expo/vector-icons"; // 👈 Asegúrate de tener esto
 import { loginUser } from "../src/config/firebaseConfig";
 import { auth, sendEmailVerification } from "../src/config/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../src/config/firebaseConfig";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -30,6 +32,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const user = await loginUser(email, password);
+
       if (!user.emailVerified) {
         Alert.alert(
           "Verifica tu correo",
@@ -42,14 +45,19 @@ export default function LoginScreen({ navigation }) {
         return;
       }
 
+      // 🔐 Verifica si está bloqueado
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists() && userDoc.data().blocked === true) {
+        Alert.alert("Acceso denegado", "Tu cuenta está bloqueada.");
+        return;
+      }
+
       navigation.replace("Home", { userId: user.uid, email });
     } catch (error) {
       if (error.code === "auth/user-not-found") {
         setError("No estás registrado. Por favor, regístrate.");
       } else if (error.code === "auth/invalid-credential") {
-        setError(
-          "Credenciales inválidas. Por favor, revisa tu correo y contraseña."
-        );
+        setError("Credenciales inválidas. Revisa tu correo y contraseña.");
       } else {
         setError("Credenciales incorrectas.");
       }

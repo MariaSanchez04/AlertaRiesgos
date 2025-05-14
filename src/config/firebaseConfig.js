@@ -19,13 +19,12 @@ import { Alert } from "react-native";
 
 // Configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyChtka2Wkc9cKaTfl4nDm3Cd4CN9hqhFDA",
-  authDomain: "proyecto-d8a81.firebaseapp.com",
-  projectId: "proyecto-d8a81",
-  storageBucket: "proyecto-d8a81.firebasestorage.app",
-  messagingSenderId: "537197437679",
-  appId: "1:537197437679:web:a430db0ed795bcde8db11a",
-  measurementId: "G-H5M9B9JC7R",
+  apiKey: "AIzaSyDla5Rw3AL_tBZ-i4syZkVbZkKvooe5Lz8",
+  authDomain: "loginfri-f29d6.firebaseapp.com",
+  projectId: "loginfri-f29d6",
+  storageBucket: "loginfri-f29d6.appspot.com",
+  messagingSenderId: "456793834143",
+  appId: "1:456793834143:web:48357d0f7f1fbd1aa998aa"
 };
 
 // Inicializar Firebase

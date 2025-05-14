@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,10 +10,8 @@ import {
   TouchableHighlight,
   FlatList,
   ActivityIndicator,
-  Image,
   Alert,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { auth } from "../src/config/firebaseConfig";
 import { signOut } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -26,10 +24,8 @@ import {
   limit,
   doc,
   getDoc,
-  updateDoc,
   onSnapshot,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -37,7 +33,7 @@ const HomeScreen = ({ navigation }) => {
     lastName: "",
     email: "",
     photoURL: "",
-    role: "", // Agregar el rol del usuario
+    role: "",
   });
 
   const [reportes, setReportes] = useState([]);
@@ -45,13 +41,10 @@ const HomeScreen = ({ navigation }) => {
   const [allNotificaciones, setAllNotificaciones] = useState([]);
   const [cantidadNotificaciones, setCantidadNotificaciones] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [viewingAllNotifications, setViewingAllNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const db = getFirestore();
-  const storage = getStorage();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -73,115 +66,13 @@ const HomeScreen = ({ navigation }) => {
             lastName: data.lastName || "",
             email: data.email || "",
             photoURL: data.photoURL || "",
-            role: data.role || "", // Agregar el rol del usuario
+            role: data.role || "",
           });
         }
       }
     };
     fetchUserData();
   }, []);
-
-  const requestPermission = async (permissionType) => {
-    if (permissionType === "camera") {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permiso denegado",
-          "Se necesita permiso para acceder a la cámara",
-          [{ text: "OK" }]
-        );
-        return false;
-      }
-    } else {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permiso denegado",
-          "Se necesita permiso para acceder a la galería",
-          [{ text: "OK" }]
-        );
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const pickImage = async () => {
-    const hasPermission = await requestPermission("media");
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      await uploadProfileImage(result.assets[0].uri);
-    }
-    setPhotoModalVisible(false);
-  };
-
-  const takePhoto = async () => {
-    const hasPermission = await requestPermission("camera");
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      await uploadProfileImage(result.assets[0].uri);
-    }
-    setPhotoModalVisible(false);
-  };
-
-  const uploadProfileImage = async (uri) => {
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", {
-        uri,
-        type: "image/jpeg",
-        name: "profile.jpg",
-      });
-      formData.append("upload_preset", "reportes");
-
-      const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dd3y0fvce/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (!data.secure_url) {
-        throw new Error("No se recibió la URL segura de la imagen");
-      }
-
-      const url = data.secure_url;
-
-      // Actualizar Firestore
-      const userId = auth.currentUser.uid;
-      await updateDoc(doc(db, "users", userId), {
-        photoURL: url,
-      });
-
-      setUserInfo((prev) => ({ ...prev, photoURL: url }));
-      Alert.alert("Éxito", "Foto de perfil actualizada correctamente");
-    } catch (error) {
-      console.error("Error al subir imagen a Cloudinary:", error);
-      Alert.alert("Error", "No se pudo subir la imagen. Intenta de nuevo.");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
@@ -244,22 +135,21 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-const handleNotificationPress = (reportId) => {
-  const updated = notificaciones.map((notif) =>
-    notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-  );
-  setNotificaciones(updated);
-  setCantidadNotificaciones(updated.filter(n => !n.leido).length);
+  const handleNotificationPress = (reportId) => {
+    const updated = notificaciones.map((notif) =>
+      notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+    );
+    setNotificaciones(updated);
+    setCantidadNotificaciones(updated.filter(n => !n.leido).length);
 
-  const updatedAll = allNotificaciones.map((notif) =>
-    notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
-  );
-  setAllNotificaciones(updatedAll);
+    const updatedAll = allNotificaciones.map((notif) =>
+      notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+    );
+    setAllNotificaciones(updatedAll);
 
-  setModalVisible(false);
-  navigation.navigate("ReporteDetalle", { reportId });
-};
-
+    setModalVisible(false);
+    navigation.navigate("ReporteDetalle", { reportId });
+  };
 
   const fetchAllNotifications = async () => {
     setLoading(true);
@@ -386,118 +276,52 @@ const handleNotificationPress = (reportId) => {
         </View>
       </Modal>
 
-      {/* Modal para seleccionar foto de perfil */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={photoModalVisible}
-        onRequestClose={() => setPhotoModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.photoModalContainer}>
-            <Text style={styles.modalTitle}>Cambiar Foto de Perfil</Text>
-
-            <TouchableOpacity style={styles.photoOption} onPress={takePhoto}>
-              <FontAwesome5
-                name="camera"
-                size={24}
-                color="#2563eb"
-                style={styles.photoOptionIcon}
-              />
-              <Text style={styles.photoOptionText}>Tomar una foto</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.photoOption} onPress={pickImage}>
-              <FontAwesome5
-                name="image"
-                size={24}
-                color="#2563eb"
-                style={styles.photoOptionIcon}
-              />
-              <Text style={styles.photoOptionText}>Elegir de la galería</Text>
-            </TouchableOpacity>
-
-            <TouchableHighlight
-              style={styles.cancelButton}
-              onPress={() => setPhotoModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableHighlight>
-          </View>
-        </View>
-      </Modal>
-
       <Animated.View style={[styles.welcomeContainer, { opacity: fadeAnim }]}>
         <Text style={styles.title}>Bienvenido</Text>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() => navigation.navigate("Perfil")}
+        >
+          <Text style={styles.profileButtonText}>Mi Perfil</Text>
+          <FontAwesome5 name="user" size={16} color="#fff" style={styles.profileIcon} />
+        </TouchableOpacity>
       </Animated.View>
 
-      <View style={styles.userInfoCard}>
+      <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={styles.profileImageContainer}
-          onPress={() => setPhotoModalVisible(true)}
+          style={styles.mainButton}
+          onPress={() => navigation.navigate("Takephoto")}
         >
-          {uploadingPhoto ? (
-            <View style={styles.loadingImageContainer}>
-              <ActivityIndicator size="large" color="#2563eb" />
-            </View>
-          ) : userInfo.photoURL ? (
-            <Image
-              source={{ uri: userInfo.photoURL }}
-              style={styles.profileImage}
-            />
-          ) : (
-            <FontAwesome5 name="user-circle" size={80} color="#aaa" />
-          )}
-          <View style={styles.cameraIconOverlay}>
-            <FontAwesome5 name="camera" size={16} color="#fff" />
-          </View>
+          <FontAwesome5 name="camera" size={24} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Crear reporte</Text>
         </TouchableOpacity>
-        <Text style={styles.name}>
-          {userInfo.firstName && userInfo.lastName
-            ? `${userInfo.firstName} ${userInfo.lastName}`
-            : "Nombre no disponible"}
-        </Text>
-        <Text style={styles.email}>
-          {userInfo.email || "Correo no disponible"}
-        </Text>
+
         <TouchableOpacity
-          style={styles.changePhotoButton}
-          onPress={() => setPhotoModalVisible(true)}
-          disabled={uploadingPhoto}
+          style={styles.mainButton}
+          onPress={() => navigation.navigate("Reportes")}
         >
-          <Text style={styles.changePhotoText}>
-            {uploadingPhoto ? "Subiendo..." : "Cambiar foto"}
-          </Text>
+          <FontAwesome5 name="clipboard-list" size={24} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Ver Reportes Enviados</Text>
+        </TouchableOpacity>
+
+        {userInfo.role === "admin" && (
+          <TouchableOpacity
+            style={styles.mainButton}
+            onPress={() => navigation.navigate("AdminScreen")}
+          >
+            <FontAwesome5 name="user-shield" size={24} color="#fff" style={styles.buttonIcon} />
+            <Text style={styles.buttonText}>Panel de Administración</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={handleLogout}
+        >
+          <FontAwesome5 name="sign-out-alt" size={20} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={styles.cameraButton}
-        onPress={() => navigation.navigate("Takephoto")}
-      >
-        <Text style={styles.cameraButtonText}>Crear reporte</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.reportsButton}
-        onPress={() => navigation.navigate("Reportes")}
-      >
-        <Text style={styles.reportsButtonText}>Ver Reportes Enviados</Text>
-      </TouchableOpacity>
-
-      {/* Botón para acceder a AdminScreen */}
-      {userInfo.role === "admin" && ( // Mostrar solo si el rol es "admin"
-        <TouchableOpacity
-          style={styles.adminButton}
-          onPress={() => navigation.navigate("AdminScreen")}
-        >
-          <Text style={styles.adminButtonText}>Panel de Administración</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -505,85 +329,6 @@ const handleNotificationPress = (reportId) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  profileImageContainer: {
-    position: "relative",
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f3f4f6",
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  cameraIconOverlay: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#2563eb",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  loadingImageContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(0,0,0,0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  photoModalContainer: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  photoOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-  photoOptionIcon: {
-    marginRight: 15,
-  },
-  photoOptionText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  cancelButton: {
-    marginTop: 15,
-    backgroundColor: "#f3f4f6",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    color: "#333",
-    fontWeight: "bold",
-  },
-  changePhotoButton: {
-    marginTop: 10,
-    backgroundColor: "#2563eb",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  changePhotoText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
   container: {
     flex: 1,
     alignItems: "center",
@@ -649,7 +394,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   newNotificationItem: {
-    backgroundColor: "#f0f9ff", // Fondo azul claro para resaltar nuevas notificaciones
+    backgroundColor: "#f0f9ff",
   },
   notificationHeader: {
     flexDirection: "row",
@@ -663,7 +408,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   newBadge: {
-    backgroundColor: "#22c55e", // Verde para indicar "nuevo"
+    backgroundColor: "#22c55e",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -682,11 +427,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6b7280",
     marginTop: 4,
-  },
-  emptyListText: {
-    textAlign: "center",
-    padding: 20,
-    color: "#6b7280",
   },
   loadingIndicator: {
     padding: 20,
@@ -726,85 +466,76 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: "85%",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    marginBottom: 30,
+    marginTop: 50,
+    flexDirection: "row",
   },
   title: {
     fontSize: 26,
     fontWeight: "700",
     color: "#334155",
-    textAlign: "center",
   },
-  userInfoCard: {
+  profileButton: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 24,
-    width: "85%",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    justifyContent: "center",
   },
-  name: {
-    fontSize: 18,
+  profileButtonText: {
+    color: "#fff",
     fontWeight: "600",
+    marginRight: 6,
+  },
+  profileIcon: {
+    marginLeft: 2,
+  },
+  buttonsContainer: {
+    width: "85%",
     marginTop: 10,
   },
-  email: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  cameraButton: {
+  mainButton: {
     backgroundColor: "#2563eb",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    marginBottom: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
-  cameraButtonText: {
+  buttonIcon: {
+    marginRight: 15,
+  },
+  buttonText: {
+    color: "#fff",
     fontSize: 16,
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  reportsButton: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    elevation: 3,
-  },
-  reportsButtonText: {
-    fontSize: 16,
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  adminButton: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    marginTop: 15,
-    elevation: 3,
-  },
-  adminButtonText: {
-    fontSize: 16,
-    color: "#FFFFFF",
     fontWeight: "bold",
   },
   logoutButton: {
-    marginTop: 30,
     backgroundColor: "#d9534f",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   logoutButtonText: {
+    color: "#fff",
     fontSize: 16,
-    color: "#FFFFFF",
     fontWeight: "bold",
   },
 });
