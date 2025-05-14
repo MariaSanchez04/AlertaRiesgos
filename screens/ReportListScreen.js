@@ -20,7 +20,6 @@ import {
   query,
   orderBy,
   doc,
-  getDoc,
   deleteDoc,
   updateDoc,
 } from "firebase/firestore";
@@ -57,21 +56,10 @@ export default function ReportListScreen() {
         const reportesRef = collection(db, "reportes");
         const q = query(reportesRef, orderBy("creadoEn", "desc"));
         const querySnapshot = await getDocs(q);
-        
-        const data = await Promise.all(querySnapshot.docs.map(async (doc) => {
-          const reporteData = doc.data();
-          // Obtener los datos del usuario asociado
-          const usuarioRef = doc(db, "usuarios", reporteData.usuarioId);
-          const usuarioSnapshot = await getDoc(usuarioRef);
-          const usuarioData = usuarioSnapshot.data();
-
-          return {
-            id: doc.id,
-            ...reporteData,
-            correoUsuario: usuarioData?.correo || "Correo no disponible",
-          };
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
         }));
-        
         setReportes(data);
       } catch (error) {
         console.error("Error al obtener reportes:", error);
