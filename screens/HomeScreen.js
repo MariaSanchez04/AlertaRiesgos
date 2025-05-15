@@ -98,14 +98,14 @@ const HomeScreen = ({ navigation }) => {
       setReportes(reportesData);
 
       const ahora = new Date();
-      const unaHoraAntes = new Date(ahora.getTime() - 60 * 60 * 1000); // 1 hora
+      const rangoDeTiempo = new Date(ahora.getTime() - 30 * 1000); // 30 segundos
 
       const nuevasNotificaciones = reportesData
         .filter((reporte) => {
           const creadoEn =
             reporte.creadoEn?.toDate?.() ??
             new Date(reporte.creadoEn?.seconds * 1000);
-          return creadoEn > unaHoraAntes;
+          return creadoEn > rangoDeTiempo;
         })
         .map((reporte) => ({
           id: reporte.id,
@@ -122,6 +122,18 @@ const HomeScreen = ({ navigation }) => {
       setCantidadNotificaciones(
         nuevasNotificaciones.filter((n) => !n.leido).length
       );
+
+      // Eliminar notificaciones después de 30 segundos
+      nuevasNotificaciones.forEach((notificacion) => {
+        setTimeout(() => {
+          setNotificaciones((prevNotificaciones) =>
+            prevNotificaciones.filter((n) => n.id !== notificacion.id)
+          );
+          setCantidadNotificaciones((prevCantidad) =>
+            prevCantidad - 1
+          );
+        }, 30000);
+      });
     });
     return () => unsubscribe();
   }, [db]);
@@ -136,12 +148,14 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleNotificationPress = (reportId) => {
-    const updated = notificaciones.map((notif) =>
-      notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
+    // Filtrar la notificación presionada de la lista de notificaciones
+    const updatedNotifications = notificaciones.filter(
+      (notif) => notif.id !== reportId
     );
-    setNotificaciones(updated);
-    setCantidadNotificaciones(updated.filter((n) => !n.leido).length);
+    setNotificaciones(updatedNotifications);
+    setCantidadNotificaciones(updatedNotifications.filter((n) => !n.leido).length);
 
+    // Actualizar la lista de todas las notificaciones
     const updatedAll = allNotificaciones.map((notif) =>
       notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
     );
@@ -160,17 +174,33 @@ const HomeScreen = ({ navigation }) => {
         id: doc.id,
         ...doc.data(),
       }));
-      const todasLasNotificaciones = reportesData.map((reporte, index) => ({
-        id: reporte.id,
-        title: "Reporte",
-        body: reporte.descripcion
-          ? reporte.descripcion.substring(0, 50) + "..."
-          : "Sin descripción",
-        time: formatTimestamp(reporte.creadoEn),
-        leido: false,
-        isNew: index < 5,
-      }));
+
+      // Obtener la hora actual y calcular el rango de la última hora
+      const ahora = new Date();
+      const rangoDeTiempo = new Date(ahora.getTime() - 60 * 60 * 1000); // Última hora
+
+      // Filtrar las notificaciones creadas en la última hora
+      const todasLasNotificaciones = reportesData
+        .filter((reporte) => {
+          const creadoEn =
+            reporte.creadoEn?.toDate?.() ??
+            new Date(reporte.creadoEn?.seconds * 1000);
+          return creadoEn > rangoDeTiempo;
+        })
+        .map((reporte) => ({
+          id: reporte.id,
+          title: "Reporte",
+          body: reporte.descripcion
+            ? reporte.descripcion.substring(0, 50) + "..."
+            : "Sin descripción",
+          time: formatTimestamp(reporte.creadoEn),
+          leido: false,
+          isNew: false, // Marcar como no nuevas al ver todas
+        }));
+
       setAllNotificaciones(todasLasNotificaciones);
+      setNotificaciones([]); // Limpiar las notificaciones nuevas
+      setCantidadNotificaciones(0); // Reiniciar el contador de notificaciones nuevas
       setViewingAllNotifications(true);
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar las notificaciones");

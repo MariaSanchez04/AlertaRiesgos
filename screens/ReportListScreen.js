@@ -199,14 +199,14 @@ export default function ReportListScreen() {
                 </View>
               )}
 
-              {userRole === "admin" && (
-                <TouchableOpacity
-                  style={{ marginTop: 10, alignSelf: "flex-end" }}
-                  onPress={() => openEditModal(item)}
-                >
-                  <Text style={{ color: "blue" }}>Editar</Text>
-                </TouchableOpacity>
-              )}
+                <View style={{ marginTop: 10 }}>
+                  <TouchableOpacity
+                    style={{ marginTop: 10, alignSelf: "flex-end" }}
+                    onPress={() => openEditModal(item)}
+                  >
+                    <Text style={{ color: "blue" }}>Editar</Text>
+                  </TouchableOpacity>
+                </View>
 
               {/* Mostrar botón de eliminar solo si el usuario es admin */}
               {userRole === "admin" && (

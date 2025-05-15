@@ -31,18 +31,9 @@ export default function App() {
           component={HomeScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="Takephoto"
-          component={TakePhotoAndUpload}
-        />
-        <Stack.Screen
-          name="Reportes"
-          component={ReportListScreen}
-        />
-        <Stack.Screen
-          name="ReporteDetalle"
-          component={ReporteDetalle}
-        />
+        <Stack.Screen name="Takephoto" component={TakePhotoAndUpload} />
+        <Stack.Screen name="Reportes" component={ReportListScreen} />
+        <Stack.Screen name="ReporteDetalle" component={ReporteDetalle} />
         <Stack.Screen
           name="AdminScreen"
           component={AdminScreen}
@@ -51,7 +42,7 @@ export default function App() {
         <Stack.Screen
           name="Perfil"
           component={PerfilScreen}
-          options={{ title: "Perfil del Usuario" }}
+          options={{ title: "Perfil del Usuario", headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
