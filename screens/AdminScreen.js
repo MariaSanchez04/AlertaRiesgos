@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,13 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker"; // Importar Picker
 import { auth, db, getUserData } from "../src/config/firebaseConfig";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 
 export default function AdminScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
@@ -116,7 +122,13 @@ export default function AdminScreen({ navigation }) {
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === selectedUser.id
-            ? { ...user, firstName: editFirstName, lastName: editLastName, role: editRole, blocked: isBlocked }
+            ? {
+                ...user,
+                firstName: editFirstName,
+                lastName: editLastName,
+                role: editRole,
+                blocked: isBlocked,
+              }
             : user
         )
       );
@@ -149,7 +161,8 @@ export default function AdminScreen({ navigation }) {
         renderItem={({ item }) => (
           <View style={styles.userItem}>
             <Text style={styles.userText}>
-              <Text style={styles.boldText}>Nombre:</Text> {item.firstName} {item.lastName}
+              <Text style={styles.boldText}>Nombre:</Text> {item.firstName}{" "}
+              {item.lastName}
             </Text>
             <Text style={styles.userText}>
               <Text style={styles.boldText}>Correo:</Text> {item.email}
@@ -158,7 +171,8 @@ export default function AdminScreen({ navigation }) {
               <Text style={styles.boldText}>Rol:</Text> {item.role}
             </Text>
             <Text style={styles.userText}>
-              <Text style={styles.boldText}>Estado:</Text> {item.blocked ? "Bloqueado" : "Activo"}
+              <Text style={styles.boldText}>Estado:</Text>{" "}
+              {item.blocked ? "Bloqueado" : "Activo"}
             </Text>
             <TouchableOpacity
               style={styles.editButton}
@@ -186,7 +200,11 @@ export default function AdminScreen({ navigation }) {
       />
 
       {/* Modal de edición */}
-      <Modal visible={editModalVisible} animationType="slide" transparent={true}>
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Editar Usuario</Text>
@@ -215,7 +233,9 @@ export default function AdminScreen({ navigation }) {
               <Text style={styles.label}>Bloquear Usuario</Text>
               <Picker
                 selectedValue={isBlocked ? "bloqueado" : "activo"}
-                onValueChange={(itemValue) => setIsBlocked(itemValue === "bloqueado")}
+                onValueChange={(itemValue) =>
+                  setIsBlocked(itemValue === "bloqueado")
+                }
                 style={styles.picker}
               >
                 <Picker.Item label="Activo" value="activo" />
@@ -223,7 +243,10 @@ export default function AdminScreen({ navigation }) {
               </Picker>
             </View>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={closeEditModal}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={closeEditModal}
+              >
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>

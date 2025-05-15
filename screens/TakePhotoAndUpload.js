@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -144,7 +144,7 @@ export default function ReportScreen() {
         latitud: ubicacion.latitude,
         longitud: ubicacion.longitude,
         creadoEn: serverTimestamp(),
-        correo: correoUsuario, // ✅ Agregar correo a la base de datos
+        correoUsuario: correoUsuario, // ✅ Agregar el correo del usuario
       });
 
       await mostrarNotificacion(

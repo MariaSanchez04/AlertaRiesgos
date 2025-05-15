@@ -13,7 +13,12 @@ import {
   Alert,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { db, auth, getUserData } from "../src/config/firebaseConfig";
+import {
+  db,
+  auth,
+  getUserData,
+  actualizarReportes,
+} from "../src/config/firebaseConfig";
 import {
   collection,
   getDocs,
@@ -56,10 +61,14 @@ export default function ReportListScreen() {
         const reportesRef = collection(db, "reportes");
         const q = query(reportesRef, orderBy("creadoEn", "desc"));
         const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const data = querySnapshot.docs.map((doc) => {
+          const reporte = doc.data();
+          return {
+            id: doc.id,
+            ...reporte,
+            correoUsuario: reporte.correoUsuario || "Correo no disponible", // Asignar valor predeterminado
+          };
+        });
         setReportes(data);
       } catch (error) {
         console.error("Error al obtener reportes:", error);
@@ -70,6 +79,10 @@ export default function ReportListScreen() {
 
     obtenerDatosUsuario(); // Obtener el rol del usuario
     obtenerReportes(); // Obtener los reportes
+  }, []);
+
+  useEffect(() => {
+    actualizarReportes();
   }, []);
 
   const handleSearch = (term) => setSearchTerm(term);
@@ -181,7 +194,7 @@ export default function ReportListScreen() {
               {userRole === "admin" && (
                 <View style={{ marginTop: 10 }}>
                   <Text style={{ fontSize: 14, color: "#555" }}>
-                    Subido por: {item.correoUsuario || "Correo no disponible"}
+                    Subido por: {item.correoUsuario}
                   </Text>
                 </View>
               )}
@@ -205,7 +218,10 @@ export default function ReportListScreen() {
                       `¿Estás seguro de que deseas eliminar este reporte?`,
                       [
                         { text: "Cancelar", style: "cancel" },
-                        { text: "Eliminar", onPress: () => eliminarReporte(item.id) },
+                        {
+                          text: "Eliminar",
+                          onPress: () => eliminarReporte(item.id),
+                        },
                       ]
                     )
                   }
@@ -240,8 +256,8 @@ export default function ReportListScreen() {
               <Text style={styles.fechaTexto}>
                 {item.creadoEn
                   ? `Publicado el ${moment(item.creadoEn.toDate()).format(
-                    "DD/MM/YYYY hh:mm A"
-                  )}`
+                      "DD/MM/YYYY hh:mm A"
+                    )}`
                   : "Fecha no disponible"}
               </Text>
             </View>

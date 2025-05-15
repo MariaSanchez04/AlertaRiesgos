@@ -14,17 +14,20 @@ import {
   doc,
   getDoc,
   updateDoc,
+  collection,
+  getDocs,
 } from "firebase/firestore";
 import { Alert } from "react-native";
 
 // Configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDla5Rw3AL_tBZ-i4syZkVbZkKvooe5Lz8",
-  authDomain: "loginfri-f29d6.firebaseapp.com",
-  projectId: "loginfri-f29d6",
-  storageBucket: "loginfri-f29d6.appspot.com",
-  messagingSenderId: "456793834143",
-  appId: "1:456793834143:web:48357d0f7f1fbd1aa998aa"
+  apiKey: "AIzaSyChtka2Wkc9cKaTfl4nDm3Cd4CN9hqhFDA",
+  authDomain: "proyecto-d8a81.firebaseapp.com",
+  projectId: "proyecto-d8a81",
+  storageBucket: "proyecto-d8a81.firebasestorage.app",
+  messagingSenderId: "537197437679",
+  appId: "1:537197437679:web:a430db0ed795bcde8db11a",
+  measurementId: "G-H5M9B9JC7R",
 };
 
 // Inicializar Firebase
@@ -146,6 +149,31 @@ export const logoutUser = async () => {
 // Observar cambios en el estado de autenticación
 export const observeAuthState = (callback) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// Actualizar reportes
+export const actualizarReportes = async () => {
+  try {
+    const reportesRef = collection(db, "reportes");
+    const querySnapshot = await getDocs(reportesRef);
+
+    querySnapshot.forEach(async (documento) => {
+      const data = documento.data();
+
+      // Si el campo correoUsuario no existe, lo agregamos
+      if (!data.correoUsuario) {
+        const reporteRef = doc(db, "reportes", documento.id);
+        await updateDoc(reporteRef, {
+          correoUsuario: "Desconocido", // Valor predeterminado
+        });
+        console.log(`Reporte ${documento.id} actualizado con correoUsuario.`);
+      }
+    });
+
+    console.log("Actualización completada.");
+  } catch (error) {
+    console.error("Error al actualizar los reportes:", error);
+  }
 };
 
 export { app, auth, db };

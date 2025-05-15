@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -140,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
       notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
     );
     setNotificaciones(updated);
-    setCantidadNotificaciones(updated.filter(n => !n.leido).length);
+    setCantidadNotificaciones(updated.filter((n) => !n.leido).length);
 
     const updatedAll = allNotificaciones.map((notif) =>
       notif.id === reportId ? { ...notif, leido: true, isNew: false } : notif
@@ -283,7 +283,12 @@ const HomeScreen = ({ navigation }) => {
           onPress={() => navigation.navigate("Perfil")}
         >
           <Text style={styles.profileButtonText}>Mi Perfil</Text>
-          <FontAwesome5 name="user" size={16} color="#fff" style={styles.profileIcon} />
+          <FontAwesome5
+            name="user"
+            size={16}
+            color="#fff"
+            style={styles.profileIcon}
+          />
         </TouchableOpacity>
       </Animated.View>
 
@@ -292,7 +297,12 @@ const HomeScreen = ({ navigation }) => {
           style={styles.mainButton}
           onPress={() => navigation.navigate("Takephoto")}
         >
-          <FontAwesome5 name="camera" size={24} color="#fff" style={styles.buttonIcon} />
+          <FontAwesome5
+            name="camera"
+            size={24}
+            color="#fff"
+            style={styles.buttonIcon}
+          />
           <Text style={styles.buttonText}>Crear reporte</Text>
         </TouchableOpacity>
 
@@ -300,7 +310,12 @@ const HomeScreen = ({ navigation }) => {
           style={styles.mainButton}
           onPress={() => navigation.navigate("Reportes")}
         >
-          <FontAwesome5 name="clipboard-list" size={24} color="#fff" style={styles.buttonIcon} />
+          <FontAwesome5
+            name="clipboard-list"
+            size={24}
+            color="#fff"
+            style={styles.buttonIcon}
+          />
           <Text style={styles.buttonText}>Ver Reportes Enviados</Text>
         </TouchableOpacity>
 
@@ -309,16 +324,23 @@ const HomeScreen = ({ navigation }) => {
             style={styles.mainButton}
             onPress={() => navigation.navigate("AdminScreen")}
           >
-            <FontAwesome5 name="user-shield" size={24} color="#fff" style={styles.buttonIcon} />
+            <FontAwesome5
+              name="user-shield"
+              size={24}
+              color="#fff"
+              style={styles.buttonIcon}
+            />
             <Text style={styles.buttonText}>Panel de Administración</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={handleLogout}
-        >
-          <FontAwesome5 name="sign-out-alt" size={20} color="#fff" style={styles.buttonIcon} />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <FontAwesome5
+            name="sign-out-alt"
+            size={20}
+            color="#fff"
+            style={styles.buttonIcon}
+          />
           <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
