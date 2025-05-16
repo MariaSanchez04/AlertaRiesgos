@@ -13,6 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
@@ -21,13 +23,14 @@ import { db } from "../src/config/firebaseConfig";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import {
   configurarNotificaciones,
   mostrarNotificacion,
 } from "../src/config/notificationsHelper";
-import { getAuth } from "firebase/auth"; // ✅ Importar auth
+import { getAuth } from "firebase/auth";
 
-const screenWidth = Dimensions.get("window").width;
+const { width } = Dimensions.get("window");
 
 export default function ReportScreen() {
   const [imagenes, setImagenes] = useState([]);
@@ -36,6 +39,7 @@ export default function ReportScreen() {
   const [cargando, setCargando] = useState(false);
   const [ubicacionError, setUbicacionError] = useState(null);
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+  const [step, setStep] = useState(1); // Para el flujo de pasos: 1=Descripción, 2=Imágenes, 3=Ubicación
 
   const navigation = useNavigation();
 
@@ -93,7 +97,10 @@ export default function ReportScreen() {
 
   const subirReporte = async () => {
     if (imagenes.length === 0 || !ubicacion || !descripcion) {
-      Alert.alert("Campos incompletos", "Por favor completa todos los campos.");
+      Alert.alert(
+        "Campos incompletos", 
+        "Por favor completa todos los campos para enviar tu reporte."
+      );
       return;
     }
 
@@ -130,7 +137,7 @@ export default function ReportScreen() {
         }
       }
 
-      const auth = getAuth(); // ✅ Obtener el auth
+      const auth = getAuth();
       const user = auth.currentUser;
       const correoUsuario = user?.email || "Desconocido";
 
@@ -144,7 +151,7 @@ export default function ReportScreen() {
         latitud: ubicacion.latitude,
         longitud: ubicacion.longitude,
         creadoEn: serverTimestamp(),
-        correoUsuario: correoUsuario, // ✅ Agregar el correo del usuario
+        correoUsuario: correoUsuario,
       });
 
       await mostrarNotificacion(
@@ -153,11 +160,11 @@ export default function ReportScreen() {
       );
 
       Alert.alert(
-        "Éxito",
-        `Reporte enviado con éxito ✅\nCorreo del usuario: ${correoUsuario}`,
+        "Reporte Enviado",
+        "Tu reporte de seguridad ha sido enviado exitosamente. Gracias por tu colaboración.",
         [
           {
-            text: "OK",
+            text: "Ver mis reportes",
             onPress: () => navigation.navigate("Reportes"),
           },
         ],
@@ -166,96 +173,184 @@ export default function ReportScreen() {
 
       setImagenes([]);
       setDescripcion("");
+      setStep(1);
     } catch (error) {
       console.error("Error subiendo el reporte:", error);
-      Alert.alert("Error", `Error al subir el reporte: ${error.message}`);
+      Alert.alert("Error", `No se pudo enviar el reporte: ${error.message}`);
     }
 
     setCargando(false);
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Descripción del Problema</Text>
-        <TextInput
-          value={descripcion}
-          onChangeText={setDescripcion}
-          placeholder="Escribe aquí..."
-          style={styles.input}
-          multiline={true}
-          numberOfLines={4}
-        />
+  const renderStepIndicator = () => {
+    return (
+      <View style={styles.stepIndicator}>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View style={[styles.stepCircle, step >= 1 && styles.activeStepCircle]}>
+            <Text style={[styles.stepNumber, step >= 1 && styles.activeStepNumber]}>1</Text>
+          </View>
+          <Text style={[styles.stepText, step === 1 && styles.activeStepText]}>Descripción</Text>
+        </View>
+        
+        <View style={styles.stepLine} />
+        
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View style={[styles.stepCircle, step >= 2 && styles.activeStepCircle]}>
+            <Text style={[styles.stepNumber, step >= 2 && styles.activeStepNumber]}>2</Text>
+          </View>
+          <Text style={[styles.stepText, step === 2 && styles.activeStepText]}>Fotos</Text>
+        </View>
+        
+        <View style={styles.stepLine} />
+        
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View style={[styles.stepCircle, step >= 3 && styles.activeStepCircle]}>
+            <Text style={[styles.stepNumber, step >= 3 && styles.activeStepNumber]}>3</Text>
+          </View>
+          <Text style={[styles.stepText, step === 3 && styles.activeStepText]}>Ubicación</Text>
+        </View>
+      </View>
+    );
+  };
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={tomarFoto}
-          disabled={cargando}
-        >
-          <Text style={styles.buttonText}>📸 Tomar Foto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={seleccionarImagenes}
-          disabled={cargando}
-        >
-          <Text style={styles.buttonText}>Seleccionar Imágenes</Text>
-        </TouchableOpacity>
+  const renderStep1 = () => {
+    return (
+      <View style={styles.stepContainer}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>¿Qué situación de seguridad quieres reportar?</Text>
+          <TextInput
+            value={descripcion}
+            onChangeText={setDescripcion}
+            placeholder="Describe el problema de seguridad que has observado..."
+            style={styles.textArea}
+            multiline={true}
+            numberOfLines={6}
+            placeholderTextColor="#A0A0A0"
+          />
+        </View>
+        
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.nextButton, !descripcion && styles.disabledButton]}
+            onPress={() => descripcion ? setStep(2) : null}
+            disabled={!descripcion}
+          >
+            <Text style={styles.nextButtonText}>Continuar</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
-        {imagenes.length > 0 && (
-          <View style={styles.imagesSection}>
-            <Text style={styles.imagesTitle}>
-              Imágenes seleccionadas ({imagenes.length})
-            </Text>
+  const renderStep2 = () => {
+    return (
+      <View style={styles.stepContainer}>
+        <Text style={styles.mediaTitle}>Añade evidencia fotográfica</Text>
+        
+        <View style={styles.mediaButtons}>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={tomarFoto}
+            disabled={cargando}
+          >
+            <Ionicons name="camera" size={28} color="#FFF" />
+            <Text style={styles.mediaButtonText}>Tomar foto</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={seleccionarImagenes}
+            disabled={cargando}
+          >
+            <Ionicons name="images" size={28} color="#FFF" />
+            <Text style={styles.mediaButtonText}>Galería</Text>
+          </TouchableOpacity>
+        </View>
+
+        {imagenes.length > 0 ? (
+          <View style={styles.imagesContainer}>
+            <Text style={styles.imagesCount}>{imagenes.length} imagen(es) seleccionada(s)</Text>
             <ScrollView
-              horizontal={true}
+              horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.imagesScrollContainer}
+              contentContainerStyle={styles.imagesScroll}
             >
               {imagenes.map((imagen, index) => (
-                <View key={index} style={styles.imageContainer}>
+                <View key={index} style={styles.imageWrapper}>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setImagenSeleccionada(imagen.uri)}
                   >
                     <Image
                       source={{ uri: imagen.uri }}
-                      style={styles.image}
-                      resizeMode="cover"
+                      style={styles.thumbnailImage}
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.deleteButton}
+                    style={styles.deleteImageButton}
                     onPress={() => eliminarImagen(imagen.uri)}
                   >
-                    <Text style={styles.deleteButtonText}>❌</Text>
+                    <Ionicons name="close-circle" size={22} color="#FFF" />
                   </TouchableOpacity>
                 </View>
               ))}
             </ScrollView>
           </View>
+        ) : (
+          <View style={styles.noImagesContainer}>
+            <MaterialCommunityIcons name="file-image-outline" size={60} color="#CCCCCC" />
+            <Text style={styles.noImagesText}>No has seleccionado imágenes</Text>
+          </View>
         )}
+        
+        <View style={styles.navigationButtons}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => setStep(1)}
+          >
+            <Ionicons name="arrow-back" size={20} color="#3F51B5" />
+            <Text style={styles.backButtonText}>Atrás</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.nextButton, imagenes.length === 0 && styles.disabledButton]}
+            onPress={() => imagenes.length > 0 ? setStep(3) : null}
+            disabled={imagenes.length === 0}
+          >
+            <Text style={styles.nextButtonText}>Continuar</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
-        <Text style={styles.locationLabel}>Ubicación:</Text>
-        {ubicacionError && (
-          <Text style={styles.errorText}>{ubicacionError}</Text>
-        )}
-
-        {ubicacion && !ubicacionError ? (
-          <View style={styles.mapContainer}>
+  const renderStep3 = () => {
+    return (
+      <View style={styles.stepContainer}>
+        <Text style={styles.locationTitle}>Confirma la ubicación del incidente</Text>
+        
+        {ubicacionError ? (
+          <View style={styles.errorContainer}>
+            <Ionicons name="warning" size={24} color="#F44336" />
+            <Text style={styles.errorText}>{ubicacionError}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={obtenerUbicacion}
+            >
+              <Text style={styles.retryButtonText}>Reintentar</Text>
+            </TouchableOpacity>
+          </View>
+        ) : ubicacion ? (
+          <View style={styles.mapWrapper}>
             <MapView
               style={styles.map}
               initialRegion={{
                 latitude: ubicacion.latitude,
                 longitude: ubicacion.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
               }}
             >
               <Marker
@@ -266,227 +361,512 @@ export default function ReportScreen() {
                 title="Ubicación del reporte"
               />
             </MapView>
+            <View style={styles.mapOverlay}>
+              <View style={styles.mapInfo}>
+                <Ionicons name="location" size={18} color="#3F51B5" />
+                <Text style={styles.locationInfo}>Ubicación actual detectada</Text>
+              </View>
+            </View>
           </View>
         ) : (
-          <Text style={styles.loadingText}>Obteniendo ubicación...</Text>
+          <View style={styles.loadingLocation}>
+            <ActivityIndicator size="large" color="#3F51B5" />
+            <Text style={styles.loadingLocationText}>Obteniendo ubicación...</Text>
+          </View>
         )}
+        
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryTitle}>Resumen del reporte</Text>
+          
+          <View style={styles.summaryItem}>
+            <Ionicons name="document-text-outline" size={20} color="#555" />
+            <Text style={styles.summaryLabel}>Descripción:</Text>
+            <Text style={styles.summaryValue} numberOfLines={1} ellipsizeMode="tail">
+              {descripcion.substring(0, 40)}{descripcion.length > 40 ? "..." : ""}
+            </Text>
+          </View>
+          
+          <View style={styles.summaryItem}>
+            <Ionicons name="images-outline" size={20} color="#555" />
+            <Text style={styles.summaryLabel}>Imágenes:</Text>
+            <Text style={styles.summaryValue}>{imagenes.length} seleccionada(s)</Text>
+          </View>
+          
+          <View style={styles.summaryItem}>
+            <Ionicons name="location-outline" size={20} color="#555" />
+            <Text style={styles.summaryLabel}>Ubicación:</Text>
+            <Text style={styles.summaryValue}>
+              {ubicacion ? "Detectada correctamente" : "Pendiente..."}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.navigationButtons}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => setStep(2)}
+          >
+            <Ionicons name="arrow-back" size={20} color="#3F51B5" />
+            <Text style={styles.backButtonText}>Atrás</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.submitButton, 
+              (!descripcion || !ubicacion || imagenes.length === 0 || cargando) && styles.disabledButton
+            ]}
+            onPress={subirReporte}
+            disabled={!descripcion || !ubicacion || imagenes.length === 0 || cargando}
+          >
+            {cargando ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>Enviar reporte</Text>
+                <Ionicons name="send" size={18} color="#FFF" />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (!descripcion || !ubicacion || imagenes.length === 0) &&
-              styles.submitButtonDisabled,
-          ]}
-          onPress={subirReporte}
-          disabled={
-            cargando || !descripcion || !ubicacion || imagenes.length === 0
-          }
+  const renderCurrentStep = () => {
+    switch (step) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      default:
+        return renderStep1();
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar backgroundColor="#3F51B5" barStyle="light-content" />
+      
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Nuevo Reporte</Text>
+          <Text style={styles.headerSubtitle}>Ayuda a mejorar la seguridad de tu comunidad</Text>
+        </View>
+        
+        {renderStepIndicator()}
+        
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.submitButtonText}>
-            {cargando ? "Enviando..." : "Enviar Reporte"}
-          </Text>
-        </TouchableOpacity>
+          {renderCurrentStep()}
+        </ScrollView>
 
-        {cargando && (
-          <ActivityIndicator
-            size="large"
-            color="#3498db"
-            style={styles.loadingIndicator}
-          />
-        )}
-      </ScrollView>
-
-      {/* Modal para visualizar la imagen seleccionada */}
-      {imagenSeleccionada && (
+        {/* Modal para visualizar la imagen seleccionada */}
         <Modal
-          visible={true}
+          visible={imagenSeleccionada !== null}
           transparent={true}
           animationType="fade"
           onRequestClose={() => setImagenSeleccionada(null)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Image
-                source={{ uri: imagenSeleccionada }}
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
-              <TouchableOpacity
-                style={styles.closeModalButton}
-                onPress={() => setImagenSeleccionada(null)}
-              >
-                <Text style={styles.closeModalText}>Cerrar</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity 
+              style={styles.closeModalButton}
+              onPress={() => setImagenSeleccionada(null)}
+            >
+              <Ionicons name="close" size={28} color="#FFF" />
+            </TouchableOpacity>
+            
+            <Image
+              source={{ uri: imagenSeleccionada }}
+              style={styles.modalImage}
+              resizeMode="contain"
+            />
           </View>
         </Modal>
-      )}
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#F5F7FA",
+  },
+  header: {
+    backgroundColor: "#3F51B5",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginTop: 4,
+  },
+  stepIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 8,
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#E0E0E0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activeStepCircle: {
+    backgroundColor: "#3F51B5",
+  },
+  stepNumber: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#555",
+  },
+  activeStepNumber: {
+    color: "#FFFFFF",
+  },
+  stepText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#888",
+    marginLeft: 4,
+  },
+  activeStepText: {
+    color: "#3F51B5",
+  },
+  stepLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: "#E0E0E0",
+    marginHorizontal: 8,
   },
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
     paddingBottom: 40,
   },
-  title: {
-    fontSize: 24,
+  stepContainer: {
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
-    marginBottom: 20,
+    marginBottom: 12,
   },
-  input: {
-    width: "100%",
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    borderColor: "#ddd",
+  textArea: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 20,
+    borderColor: "#E0E0E0",
+    padding: 16,
     fontSize: 16,
     color: "#333",
+    minHeight: 120,
+    textAlignVertical: "top",
   },
-  button: {
-    backgroundColor: "#3498db",
-    padding: 14,
-    borderRadius: 8,
-    marginBottom: 15,
-    width: "100%",
+  buttonContainer: {
+    alignItems: "flex-end",
+    marginTop: 16,
+  },
+  nextButton: {
+    backgroundColor: "#3F51B5",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  buttonText: {
-    color: "#fff",
+  nextButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+    marginRight: 8,
   },
-  imagesSection: {
-    marginVertical: 15,
+  disabledButton: {
+    backgroundColor: "#CCCCCC",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  imagesTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 10,
+  mediaTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 16,
+  },
+  mediaButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 24,
+  },
+  mediaButton: {
+    backgroundColor: "#3F51B5",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    width: width * 0.4,
+    height: 100,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  mediaButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 8,
+  },
+  imagesContainer: {
+    marginBottom: 24,
+  },
+  imagesCount: {
+    fontSize: 14,
     color: "#555",
+    marginBottom: 12,
   },
-  imagesScrollContainer: {
-    paddingBottom: 10,
+  imagesScroll: {
+    paddingRight: 16,
   },
-  imageContainer: {
+  imageWrapper: {
     marginRight: 12,
     position: "relative",
   },
-  image: {
-    width: 160,
-    height: 160,
+  thumbnailImage: {
+    width: 100,
+    height: 100,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
   },
-  deleteButton: {
+  deleteImageButton: {
     position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: "white",
+    backgroundColor: "#F44336",
     width: 24,
     height: 24,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+  },
+  noImagesContainer: {
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 24,
+  },
+  noImagesText: {
+    fontSize: 16,
+    color: "#888",
+    marginTop: 12,
+  },
+  navigationButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#3F51B5",
+  },
+  backButtonText: {
+    color: "#3F51B5",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  locationTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 16,
+  },
+  errorContainer: {
+    backgroundColor: "#FFEBEE",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F44336",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#F44336",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  mapWrapper: {
+    height: 220,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 24,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  mapOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  mapInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  locationInfo: {
+    fontSize: 14,
+    color: "#555",
+    marginLeft: 6,
+  },
+  loadingLocation: {
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8F8F8",
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  loadingLocationText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 12,
+  },
+  summaryContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
-  deleteButtonText: {
-    fontSize: 12,
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 12,
   },
-  modalOverlay: {
+  summaryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#555",
+    fontWeight: "600",
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: "#333",
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.85)",
   },
-  modalContent: {
-    width: "90%",
+  submitButton: {
+    backgroundColor: "#4CAF50",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  submitButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalImage: {
-    width: "100%",
-    height: 400,
+    width: width * 0.9,
+    height: width * 0.9,
     borderRadius: 8,
   },
   closeModalButton: {
-    backgroundColor: "#3498db",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 15,
-  },
-  closeModalText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  locationLabel: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#333",
-    marginVertical: 10,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 10,
-  },
-  mapContainer: {
-    width: "100%",
-    height: 250,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  map: {
-    flex: 1,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#888",
-    textAlign: "center",
-    padding: 10,
-  },
-  submitButton: {
-    backgroundColor: "#2ecc71",
-    padding: 14,
-    borderRadius: 8,
-    marginTop: 20,
-    width: "100%",
+    position: "absolute",
+    top: 40,
+    right: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
     alignItems: "center",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#ccc",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  loadingIndicator: {
-    marginTop: 20,
+    zIndex: 10,
   },
 });

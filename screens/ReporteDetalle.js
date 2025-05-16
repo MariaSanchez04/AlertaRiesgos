@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  View,
   Text,
   Image,
   ActivityIndicator,
@@ -41,12 +42,19 @@ export default function ReporteDetalle() {
 
   if (cargando) {
     return (
-      <ActivityIndicator size="large" color="blue" style={{ marginTop: 50 }} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3F51B5" />
+        <Text style={styles.loadingText}>Cargando reporte...</Text>
+      </View>
     );
   }
 
   if (!reporte) {
-    return <Text style={styles.mensajeError}>No se encontró el reporte.</Text>;
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>No se encontró el reporte.</Text>
+      </View>
+    );
   }
 
   const imagenes =
@@ -70,22 +78,24 @@ export default function ReporteDetalle() {
       </Text>
 
       {reporte.latitud && reporte.longitud ? (
-        <MapView
-          style={styles.mapa}
-          initialRegion={{
-            latitude: reporte.latitud,
-            longitude: reporte.longitud,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          }}
-        >
-          <Marker
-            coordinate={{
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.mapa}
+            initialRegion={{
               latitude: reporte.latitud,
               longitude: reporte.longitud,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
             }}
-          />
-        </MapView>
+          >
+            <Marker
+              coordinate={{
+                latitude: reporte.latitud,
+                longitude: reporte.longitud,
+              }}
+            />
+          </MapView>
+        </View>
       ) : (
         <Text style={styles.ubicacion}>Ubicación no disponible</Text>
       )}
@@ -103,43 +113,71 @@ export default function ReporteDetalle() {
 
 const styles = StyleSheet.create({
   container: {
+    flexGrow: 1,
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F7FA",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#555",
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "red",
   },
   titulo: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 16,
+    textAlign: "center",
   },
   imagen: {
     width: "100%",
     height: 250,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   descripcion: {
     fontSize: 16,
-    marginBottom: 10,
+    fontWeight: "600",
+    color: "#333",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  mapContainer: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: "hidden",
   },
   mapa: {
     width: "100%",
     height: 200,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 12,
   },
   ubicacion: {
     fontSize: 14,
-    color: "gray",
-    marginBottom: 10,
+    color: "#888",
+    marginTop: 16,
+    textAlign: "center",
   },
   fecha: {
     fontSize: 14,
-    color: "#666",
-  },
-  mensajeError: {
-    marginTop: 50,
+    color: "#777",
+    marginTop: 16,
     textAlign: "center",
-    fontSize: 16,
-    color: "red",
   },
 });

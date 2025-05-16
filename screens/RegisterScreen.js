@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Dimensions,
 } from "react-native";
 import { sendEmailVerification } from "firebase/auth";
 import { registerUser, auth } from "../src/config/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get("window");
 
 export default function RegisterScreen({ navigation }) {
   const [fName, setFName] = useState("");
@@ -39,7 +42,6 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    // Validación de correo electrónico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Por favor, ingresa un correo electrónico válido");
@@ -76,69 +78,97 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const renderPasswordInput = (value, setValue, show, setShow, placeholder) => (
-    <View style={styles.passwordContainer}>
-      <TextInput
-        placeholder={placeholder}
-        value={value}
-        onChangeText={setValue}
-        style={styles.passwordInput}
-        secureTextEntry={!show}
-        autoCapitalize="none"
-      />
-      <TouchableOpacity onPress={() => setShow(!show)}>
-        <Ionicons
-          name={show ? "eye-off-outline" : "eye-outline"}
-          size={24}
-          color="#666"
-        />
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Crear Cuenta</Text>
 
-      <TextInput
-        placeholder="Nombre"
-        value={fName}
-        onChangeText={setFName}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+        <TextInput
+          placeholder="Nombre"
+          value={fName}
+          onChangeText={setFName}
+          style={styles.input}
+          placeholderTextColor="#888"
+        />
+      </View>
 
-      <TextInput
-        placeholder="Apellido"
-        value={lName}
-        onChangeText={setLName}
-        style={styles.input}
-      />
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+        <TextInput
+          placeholder="Apellido"
+          value={lName}
+          onChangeText={setLName}
+          style={styles.input}
+          placeholderTextColor="#888"
+        />
+      </View>
 
-      <TextInput
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+      <View style={styles.inputContainer}>
+        <Ionicons name="mail-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+        <TextInput
+          placeholder="Correo electrónico"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholderTextColor="#888"
+        />
+      </View>
 
-      {renderPasswordInput(
-        password,
-        setPassword,
-        showPassword,
-        setShowPassword,
-        "Contraseña"
-      )}
-      {renderPasswordInput(
-        confirmPassword,
-        setConfirmPassword,
-        showConfirmPassword,
-        setShowConfirmPassword,
-        "Confirmar contraseña"
-      )}
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+        <TextInput
+          placeholder="Contraseña"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={24}
+            color="#0370b7"
+          />
+        </TouchableOpacity>
+      </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+        <TextInput
+          placeholder="Confirmar contraseña"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={styles.input}
+          secureTextEntry={!showConfirmPassword}
+          autoCapitalize="none"
+          placeholderTextColor="#888"
+        />
+        <TouchableOpacity
+          style={styles.eyeIcon}
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <Ionicons
+            name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+            size={24}
+            color="#0370b7"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={18} color="#e74c3c" />
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
 
       <TouchableOpacity
         style={styles.button}
@@ -163,53 +193,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    padding: 30,
+    padding: 24,
     backgroundColor: "#f7f7f7",
   },
   title: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 40,
+    color: "#0370b7",
+    marginBottom: 24,
     textAlign: "center",
   },
-  input: {
-    height: 55,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-    fontSize: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-  },
-  passwordContainer: {
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#f3f8ff",
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 15,
     height: 55,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    borderColor: "#dce8f5",
   },
-  passwordInput: {
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
     flex: 1,
     fontSize: 16,
+    color: "#333",
+  },
+  eyeIcon: {
+    padding: 5,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingHorizontal: 10,
   },
   error: {
     color: "#e74c3c",
-    marginBottom: 16,
-    textAlign: "center",
+    marginLeft: 5,
     fontSize: 14,
   },
   button: {
@@ -218,17 +242,24 @@ const styles = StyleSheet.create({
     height: 55,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-    elevation: 5,
+    marginBottom: 16,
+    shadowColor: "#0370b7",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
   },
   buttonText: {
-    color: "#fff",
+    color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
   link: {
     color: "#0370b7",
     textAlign: "center",
-    fontSize: 16,
+    fontSize: 14,
   },
 });

@@ -11,8 +11,12 @@ import {
   Modal,
   ScrollView,
   Alert,
+  StatusBar,
+  SafeAreaView,
+  Dimensions,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   db,
   auth,
@@ -30,6 +34,8 @@ import {
 } from "firebase/firestore";
 import moment from "moment";
 
+const { width } = Dimensions.get("window");
+
 export default function ReportListScreen() {
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -41,7 +47,7 @@ export default function ReportListScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedReporte, setSelectedReporte] = useState(null);
   const [editDescripcion, setEditDescripcion] = useState("");
-  const [userRole, setUserRole] = useState(""); // Nuevo estado para el rol del usuario
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const obtenerDatosUsuario = async () => {
@@ -49,7 +55,7 @@ export default function ReportListScreen() {
         const user = auth.currentUser;
         if (user) {
           const userData = await getUserData(user.uid);
-          setUserRole(userData?.role || ""); // Guardar el rol del usuario
+          setUserRole(userData?.role || "");
         }
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
@@ -66,7 +72,7 @@ export default function ReportListScreen() {
           return {
             id: doc.id,
             ...reporte,
-            correoUsuario: reporte.correoUsuario || "Correo no disponible", // Asignar valor predeterminado
+            correoUsuario: reporte.correoUsuario || "Correo no disponible",
           };
         });
         setReportes(data);
@@ -77,8 +83,8 @@ export default function ReportListScreen() {
       }
     };
 
-    obtenerDatosUsuario(); // Obtener el rol del usuario
-    obtenerReportes(); // Obtener los reportes
+    obtenerDatosUsuario();
+    obtenerReportes();
   }, []);
 
   useEffect(() => {
@@ -129,51 +135,83 @@ export default function ReportListScreen() {
       );
 
       closeEditModal();
+      Alert.alert("Éxito", "Reporte actualizado correctamente");
     } catch (error) {
       console.error("Error al actualizar reporte:", error);
+      Alert.alert("Error", "No se pudo actualizar el reporte");
     }
   };
 
   const eliminarReporte = async (reporteId) => {
     try {
-      await deleteDoc(doc(db, "reportes", reporteId)); // Eliminar el reporte de Firestore
-      setReportes((prev) => prev.filter((r) => r.id !== reporteId)); // Actualizar la lista local
-      Alert.alert("Éxito", "Reporte eliminado correctamente.");
+      await deleteDoc(doc(db, "reportes", reporteId));
+      setReportes((prev) => prev.filter((r) => r.id !== reporteId));
+      Alert.alert("Éxito", "Reporte eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar el reporte:", error);
-      Alert.alert("Error", "No se pudo eliminar el reporte.");
+      Alert.alert("Error", "No se pudo eliminar el reporte");
     }
+  };
+
+  const renderHeader = () => {
+    return (
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Reportes de Seguridad</Text>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar por descripción"
+            placeholderTextColor="#888"
+            value={searchTerm}
+            onChangeText={handleSearch}
+          />
+          {searchTerm.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchTerm("")}>
+              <Ionicons name="close-circle" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
   };
 
   if (cargando) {
     return (
-      <ActivityIndicator size="large" color="blue" style={styles.loading} />
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3F51B5" />
+        <Text style={styles.loadingText}>Cargando reportes...</Text>
+      </SafeAreaView>
     );
   }
 
   if (filteredReportes.length === 0) {
     return (
-      <Text style={styles.noReports}>
-        No hay reportes que coincidan con la búsqueda.
-      </Text>
+      <SafeAreaView style={styles.container}>
+        {renderHeader()}
+        <View style={styles.emptyContainer}>
+          <Ionicons name="alert-circle-outline" size={60} color="#888" />
+          <Text style={styles.noReports}>
+            No hay reportes que coincidan con la búsqueda.
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar por descripción"
-        value={searchTerm}
-        onChangeText={handleSearch}
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor="#3F51B5" barStyle="light-content" />
+      
       <FlatList
         data={filteredReportes}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
+        ListHeaderComponent={renderHeader}
         renderItem={({ item }) => {
           const imagenes =
             item.imagenesUrls || (item.imagenUrl ? [item.imagenUrl] : []);
+          
           return (
             <View style={styles.reportCard}>
               {imagenes.length > 0 && (
@@ -184,112 +222,141 @@ export default function ReportListScreen() {
                     resizeMode="cover"
                   />
                   {imagenes.length > 1 && (
-                    <Text style={styles.moreImagesText}>Ver más imágenes</Text>
+                    <View style={styles.moreImagesIndicator}>
+                      <Ionicons name="images" size={18} color="#FFF" />
+                      <Text style={styles.moreImagesText}>
+                        +{imagenes.length - 1}
+                      </Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               )}
 
-              <Text style={styles.descripcion}>{item.descripcion}</Text>
+              <View style={styles.reportContent}>
+                <Text style={styles.descripcion}>{item.descripcion}</Text>
 
-              {userRole === "admin" && (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={{ fontSize: 14, color: "#555" }}>
-                    Subido por: {item.correoUsuario}
-                  </Text>
+                <View style={styles.metaDataContainer}>
+                  {item.creadoEn && (
+                    <View style={styles.metaDataItem}>
+                      <Ionicons name="time-outline" size={14} color="#777" />
+                      <Text style={styles.metaDataText}>
+                        {moment(item.creadoEn.toDate()).format("DD/MM/YYYY hh:mm A")}
+                      </Text>
+                    </View>
+                  )}
+
+                  {userRole === "admin" && (
+                    <View style={styles.metaDataItem}>
+                      <Ionicons name="person-outline" size={14} color="#777" />
+                      <Text style={styles.metaDataText}>
+                        {item.correoUsuario}
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              )}
 
-                <View style={{ marginTop: 10 }}>
+                {item.latitud && item.longitud ? (
+                  <View style={styles.mapContainer}>
+                    <MapView
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: item.latitud,
+                        longitude: item.longitud,
+                        latitudeDelta: 0.005,
+                        longitudeDelta: 0.005,
+                      }}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                    >
+                      <Marker
+                        coordinate={{
+                          latitude: item.latitud,
+                          longitude: item.longitud,
+                        }}
+                      />
+                    </MapView>
+                    <TouchableOpacity style={styles.mapButton}>
+                      <Text style={styles.mapButtonText}>Ver en mapa completo</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.noLocationContainer}>
+                    <Ionicons name="location-off-outline" size={16} color="#888" />
+                    <Text style={styles.locationText}>Ubicación no disponible</Text>
+                  </View>
+                )}
+
+                <View style={styles.actionsContainer}>
                   <TouchableOpacity
-                    style={{ marginTop: 10, alignSelf: "flex-end" }}
+                    style={styles.actionButton}
                     onPress={() => openEditModal(item)}
                   >
-                    <Text style={{ color: "blue" }}>Editar</Text>
+                    <Ionicons name="create-outline" size={18} color="#3F51B5" />
+                    <Text style={[styles.actionText, {color: "#3F51B5"}]}>Editar</Text>
                   </TouchableOpacity>
+
+                  {userRole === "admin" && (
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() =>
+                        Alert.alert(
+                          "Confirmar eliminación",
+                          "¿Estás seguro de que deseas eliminar este reporte?",
+                          [
+                            { text: "Cancelar", style: "cancel" },
+                            {
+                              text: "Eliminar",
+                              onPress: () => eliminarReporte(item.id),
+                              style: "destructive",
+                            },
+                          ]
+                        )
+                      }
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#F44336" />
+                      <Text style={[styles.actionText, {color: "#F44336"}]}>Eliminar</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-
-              {/* Mostrar botón de eliminar solo si el usuario es admin */}
-              {userRole === "admin" && (
-                <TouchableOpacity
-                  style={{ marginTop: 10, alignSelf: "flex-end" }}
-                  onPress={() =>
-                    Alert.alert(
-                      "Confirmar eliminación",
-                      `¿Estás seguro de que deseas eliminar este reporte?`,
-                      [
-                        { text: "Cancelar", style: "cancel" },
-                        {
-                          text: "Eliminar",
-                          onPress: () => eliminarReporte(item.id),
-                        },
-                      ]
-                    )
-                  }
-                >
-                  <Text style={{ color: "red" }}>Eliminar</Text>
-                </TouchableOpacity>
-              )}
-
-              {item.latitud && item.longitud ? (
-                <MapView
-                  style={styles.map}
-                  initialRegion={{
-                    latitude: item.latitud,
-                    longitude: item.longitud,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
-                  }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                >
-                  <Marker
-                    coordinate={{
-                      latitude: item.latitud,
-                      longitude: item.longitud,
-                    }}
-                  />
-                </MapView>
-              ) : (
-                <Text style={styles.locationText}>Ubicación no disponible</Text>
-              )}
-
-              <Text style={styles.fechaTexto}>
-                {item.creadoEn
-                  ? `Publicado el ${moment(item.creadoEn.toDate()).format(
-                      "DD/MM/YYYY hh:mm A"
-                    )}`
-                  : "Fecha no disponible"}
-              </Text>
+              </View>
             </View>
           );
         }}
       />
 
       {/* Modal de imágenes */}
-      {modalVisible && (
-        <Modal transparent={true} visible={modalVisible} animationType="fade">
-          <View style={styles.modalContainer}>
-            <ScrollView contentContainerStyle={styles.verticalModalContent}>
-              {selectedImages.map((url, index) => (
-                <View key={index} style={styles.modalImageContainer}>
-                  <Image
-                    source={{ uri: url }}
-                    style={styles.modalImage}
-                    resizeMode="contain"
-                  />
+      <Modal transparent={true} visible={modalVisible} animationType="fade">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.closeModalButton}
+            onPress={closeImageModal}
+          >
+            <Ionicons name="close" size={28} color="#FFF" />
+          </TouchableOpacity>
+          
+          <ScrollView 
+            horizontal={false} 
+            pagingEnabled={true} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.verticalModalContent}
+          >
+            {selectedImages.map((url, index) => (
+              <View key={index} style={styles.modalImageContainer}>
+                <Image
+                  source={{ uri: url }}
+                  style={styles.modalImage}
+                  resizeMode="contain"
+                />
+                <View style={styles.imageCounter}>
+                  <Text style={styles.imageCounterText}>
+                    {index + 1}/{selectedImages.length}
+                  </Text>
                 </View>
-              ))}
-            </ScrollView>
-
-            <TouchableOpacity
-              onPress={closeImageModal}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-      )}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* Modal de edición */}
       <Modal
@@ -299,175 +366,314 @@ export default function ReportListScreen() {
       >
         <View style={styles.editModalContainer}>
           <View style={styles.editModalContent}>
-            <Text style={styles.editModalTitle}>Editar descripción</Text>
+            <View style={styles.editModalHeader}>
+              <Text style={styles.editModalTitle}>Editar descripción</Text>
+              <TouchableOpacity onPress={closeEditModal}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            
             <TextInput
               style={styles.editInput}
               multiline
               value={editDescripcion}
               onChangeText={setEditDescripcion}
+              placeholder="Describe el reporte de seguridad"
             />
+            
             <View style={styles.editButtons}>
               <TouchableOpacity
                 onPress={closeEditModal}
                 style={styles.cancelButton}
               >
-                <Text style={{ color: "white" }}>Cancelar</Text>
+                <Text style={styles.buttonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={guardarCambios}
                 style={styles.saveButton}
               >
-                <Text style={{ color: "white" }}>Guardar</Text>
+                <Text style={styles.buttonText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
+    backgroundColor: "#F5F7FA",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#555",
+    fontSize: 16,
+  },
+  header: {
     paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: "#F5F7FA",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 16,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
   },
   searchInput: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingLeft: 10,
-    marginBottom: 20,
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
   },
-  loading: {
-    marginTop: 50,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
   },
   noReports: {
-    marginTop: 50,
+    marginTop: 16,
     textAlign: "center",
     fontSize: 18,
-    color: "gray",
+    color: "#666",
+    lineHeight: 24,
   },
   listContainer: {
-    paddingBottom: 16,
+    paddingBottom: 24,
   },
   reportCard: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: "#fff",
+    margin: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
   },
   image: {
     width: "100%",
     height: 200,
-    borderRadius: 8,
+  },
+  moreImagesIndicator: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: "row",
+    alignItems: "center",
   },
   moreImagesText: {
-    color: "blue",
-    textAlign: "center",
-    marginTop: 5,
+    color: "#FFF",
+    marginLeft: 4,
     fontSize: 14,
+    fontWeight: "600",
+  },
+  reportContent: {
+    padding: 16,
   },
   descripcion: {
-    marginTop: 10,
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
+    color: "#333",
+    lineHeight: 22,
   },
-  fechaTexto: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 4,
+  metaDataContainer: {
+    marginTop: 12,
+    marginBottom: 16,
   },
-  locationText: {
-    fontSize: 12,
-    color: "gray",
-    marginTop: 5,
+  metaDataItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  metaDataText: {
+    fontSize: 14,
+    color: "#777",
+    marginLeft: 4,
+  },
+  mapContainer: {
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: "hidden",
   },
   map: {
     width: "100%",
     height: 150,
-    marginTop: 10,
-    borderRadius: 8,
+    borderRadius: 12,
+  },
+  mapButton: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  mapButtonText: {
+    fontSize: 12,
+    color: "#3F51B5",
+    fontWeight: "600",
+  },
+  noLocationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  locationText: {
+    fontSize: 14,
+    color: "#888",
+    marginLeft: 4,
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#EEEEEE",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 16,
+    padding: 6,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 4,
   },
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 8,
+    borderRadius: 20,
   },
   verticalModalContent: {
-    flexDirection: "column",
-    alignItems: "center",
-    paddingVertical: 5,
+    flexGrow: 1,
   },
   modalImageContainer: {
-    marginBottom: 2,
+    width: width,
+    height: "100%",
+    justifyContent: "center",
     alignItems: "center",
   },
   modalImage: {
-    width: 350,
-    height: 350,
-    borderRadius: 10,
+    width: width,
+    height: width,
     resizeMode: "contain",
   },
-  closeButton: {
+  imageCounter: {
     position: "absolute",
-    bottom: 30,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: 15,
-    borderRadius: 10,
+    bottom: 40,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  closeButtonText: {
-    color: "white",
-    fontSize: 18,
+  imageCounterText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
   editModalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   editModalContent: {
-    width: "90%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "#FFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  editModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
   editModalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
   },
   editInput: {
-    height: 100,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
+    backgroundColor: "#F5F7FA",
+    borderRadius: 12,
+    padding: 16,
+    height: 120,
+    fontSize: 16,
+    color: "#333",
     textAlignVertical: "top",
   },
   editButtons: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 15,
+    marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: "#888",
-    padding: 10,
+    backgroundColor: "#9E9E9E",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    marginRight: 10,
+    marginRight: 12,
   },
   saveButton: {
-    backgroundColor: "blue",
-    padding: 10,
+    backgroundColor: "#3F51B5",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
+  },
+  buttonText: {
+    color: "#FFF",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

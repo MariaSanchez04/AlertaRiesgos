@@ -7,10 +7,11 @@ import {
   Animated,
   TouchableOpacity,
   Modal,
-  TouchableHighlight,
   FlatList,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
+  Image,
 } from "react-native";
 import { auth } from "../src/config/firebaseConfig";
 import { signOut } from "firebase/auth";
@@ -26,6 +27,7 @@ import {
   getDoc,
   onSnapshot,
 } from "firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
 
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -49,7 +51,7 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 1500,
+      duration: 800,
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
@@ -76,12 +78,33 @@ const HomeScreen = ({ navigation }) => {
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
-    if (timestamp.seconds)
-      return new Date(timestamp.seconds * 1000).toLocaleString();
-    if (timestamp.toDate && typeof timestamp.toDate === "function")
-      return timestamp.toDate().toLocaleString();
-    if (timestamp instanceof Date) return timestamp.toLocaleString();
-    return "Fecha no disponible";
+    
+    const date = timestamp.seconds 
+      ? new Date(timestamp.seconds * 1000)
+      : timestamp.toDate && typeof timestamp.toDate === "function"
+        ? timestamp.toDate()
+        : timestamp instanceof Date 
+          ? timestamp 
+          : null;
+          
+    if (!date) return "Fecha no disponible";
+    
+    // Formato más moderno y legible de fecha
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return "Hace un momento";
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return date.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+    });
   };
 
   useEffect(() => {
@@ -116,6 +139,8 @@ const HomeScreen = ({ navigation }) => {
           time: formatTimestamp(reporte.creadoEn),
           leido: false,
           isNew: true,
+          tipo: reporte.tipo || "General",
+          ubicacion: reporte.ubicacion || "No especificada",
         }));
 
       setNotificaciones(nuevasNotificaciones);
@@ -129,9 +154,7 @@ const HomeScreen = ({ navigation }) => {
           setNotificaciones((prevNotificaciones) =>
             prevNotificaciones.filter((n) => n.id !== notificacion.id)
           );
-          setCantidadNotificaciones((prevCantidad) =>
-            prevCantidad - 1
-          );
+          setCantidadNotificaciones((prevCantidad) => Math.max(0, prevCantidad - 1));
         }, 30000);
       });
     });
@@ -196,6 +219,8 @@ const HomeScreen = ({ navigation }) => {
           time: formatTimestamp(reporte.creadoEn),
           leido: false,
           isNew: false, // Marcar como no nuevas al ver todas
+          tipo: reporte.tipo || "General",
+          ubicacion: reporte.ubicacion || "No especificada",
         }));
 
       setAllNotificaciones(todasLasNotificaciones);
@@ -209,6 +234,42 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
+  // Iconos para los diferentes tipos de reportes
+  const getTipoIcon = (tipo) => {
+    switch (tipo.toLowerCase()) {
+      case "robo":
+        return "mask";
+      case "vandalismo":
+        return "spray-can";
+      case "accidente":
+        return "car-crash";
+      case "incendio":
+        return "fire";
+      case "inundación":
+        return "water";
+      default:
+        return "exclamation-triangle";
+    }
+  };
+
+  // Color para los diferentes tipos de reportes
+  const getTipoColor = (tipo) => {
+    switch (tipo.toLowerCase()) {
+      case "robo":
+        return "#E53935";
+      case "vandalismo":
+        return "#8E24AA";
+      case "accidente":
+        return "#FB8C00";
+      case "incendio":
+        return "#D50000";
+      case "inundación":
+        return "#039BE5";
+      default:
+        return "#546E7A";
+    }
+  };
+
   const renderNotificationItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => handleNotificationPress(item.id)}
@@ -217,38 +278,80 @@ const HomeScreen = ({ navigation }) => {
         item.isNew && styles.newNotificationItem,
       ]}
     >
-      <View style={styles.notificationHeader}>
-        <Text style={styles.notificationText}>{item.title}</Text>
-        {item.isNew && (
-          <View style={styles.newBadge}>
-            <Text style={styles.newBadgeText}>Nuevo</Text>
-          </View>
-        )}
+      <View style={styles.notificationIconContainer}>
+        <View style={[styles.notificationIcon, { backgroundColor: getTipoColor(item.tipo) }]}>
+          <FontAwesome5 name={getTipoIcon(item.tipo)} size={16} color="#fff" />
+        </View>
       </View>
-      <Text style={styles.notificationBody}>{item.body}</Text>
-      <Text style={styles.notificationTime}>{item.time}</Text>
+      <View style={styles.notificationContent}>
+        <View style={styles.notificationHeader}>
+          <Text style={styles.notificationText}>{item.title}</Text>
+          {item.isNew && (
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>Nuevo</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.notificationBody}>{item.body}</Text>
+        <View style={styles.notificationFooter}>
+          <Text style={styles.notificationLocation}>
+            <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" /> {item.ubicacion}
+          </Text>
+          <Text style={styles.notificationTime}>{item.time}</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffff" />
-      <TouchableOpacity
-        style={styles.notificationBell}
-        onPress={() => {
-          setViewingAllNotifications(false);
-          setModalVisible(true);
-        }}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      
+      <LinearGradient
+        colors={['#0F172A', '#1E293B']}
+        style={styles.header}
       >
-        <FontAwesome5 name="bell" size={24} color="#334155" />
-        {cantidadNotificaciones > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {cantidadNotificaciones > 9 ? "9+" : cantidadNotificaciones}
-            </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>Hola, {userInfo.firstName}</Text>
+            <Text style={styles.subtitle}>Manteniendo seguro tu barrio</Text>
           </View>
-        )}
-      </TouchableOpacity>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.notificationBell}
+              onPress={() => {
+                setViewingAllNotifications(false);
+                setModalVisible(true);
+              }}
+            >
+              <FontAwesome5 name="bell" size={22} color="#CBD5E1" />
+              {cantidadNotificaciones > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {cantidadNotificaciones > 9 ? "9+" : cantidadNotificaciones}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.profileImageContainer}
+              onPress={() => navigation.navigate("Perfil")}
+            >
+              {userInfo.photoURL ? (
+                <Image source={{ uri: userInfo.photoURL }} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profilePlaceholder}>
+                  <Text style={styles.profileInitial}>
+                    {userInfo.firstName ? userInfo.firstName[0] : "U"}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
 
       {/* Modal de Notificaciones */}
       <Modal
@@ -262,27 +365,41 @@ const HomeScreen = ({ navigation }) => {
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
+            <View style={styles.modalHandle}></View>
+            
             <Text style={styles.modalTitle}>
               {viewingAllNotifications
                 ? "Todas las Notificaciones"
                 : "Notificaciones Recientes"}
             </Text>
+            
             {loading ? (
               <ActivityIndicator
                 size="large"
-                color="#2563eb"
+                color="#3B82F6"
                 style={styles.loadingIndicator}
               />
             ) : (
-              <FlatList
-                data={
-                  viewingAllNotifications ? allNotificaciones : notificaciones
-                }
-                renderItem={renderNotificationItem}
-                keyExtractor={(item) => item.id}
-                style={styles.notificationList}
-              />
+              <>
+                {(viewingAllNotifications ? allNotificaciones : notificaciones).length > 0 ? (
+                  <FlatList
+                    data={viewingAllNotifications ? allNotificaciones : notificaciones}
+                    renderItem={renderNotificationItem}
+                    keyExtractor={(item) => item.id}
+                    style={styles.notificationList}
+                    showsVerticalScrollIndicator={false}
+                  />
+                ) : (
+                  <View style={styles.emptyNotifications}>
+                    <FontAwesome5 name="bell-slash" size={48} color="#CBD5E1" />
+                    <Text style={styles.emptyNotificationsText}>
+                      No hay notificaciones recientes
+                    </Text>
+                  </View>
+                )}
+              </>
             )}
+            
             {!viewingAllNotifications && (
               <TouchableOpacity
                 onPress={fetchAllNotifications}
@@ -293,7 +410,8 @@ const HomeScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             )}
-            <TouchableHighlight
+            
+            <TouchableOpacity
               style={styles.closeButton}
               onPress={() => {
                 setModalVisible(false);
@@ -301,115 +419,164 @@ const HomeScreen = ({ navigation }) => {
               }}
             >
               <Text style={styles.closeButtonText}>Cerrar</Text>
-            </TouchableHighlight>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <Animated.View style={[styles.welcomeContainer, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>Bienvenido</Text>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={() => navigation.navigate("Perfil")}
-        >
-          <Text style={styles.profileButtonText}>Mi Perfil</Text>
-          <FontAwesome5
-            name="user"
-            size={16}
-            color="#fff"
-            style={styles.profileIcon}
-          />
-        </TouchableOpacity>
-      </Animated.View>
-
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.mainButton}
-          onPress={() => navigation.navigate("Takephoto")}
-        >
-          <FontAwesome5
-            name="camera"
-            size={24}
-            color="#fff"
-            style={styles.buttonIcon}
-          />
-          <Text style={styles.buttonText}>Crear reporte</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.mainButton}
-          onPress={() => navigation.navigate("Reportes")}
-        >
-          <FontAwesome5
-            name="clipboard-list"
-            size={24}
-            color="#fff"
-            style={styles.buttonIcon}
-          />
-          <Text style={styles.buttonText}>Ver Reportes Enviados</Text>
-        </TouchableOpacity>
-
-        {userInfo.role === "admin" && (
-          <TouchableOpacity
-            style={styles.mainButton}
-            onPress={() => navigation.navigate("AdminScreen")}
+      <View style={styles.content}>
+        <Animated.View style={[styles.welcomeCard, { opacity: fadeAnim }]}>
+          <LinearGradient
+            colors={['#3B82F6', '#2563EB']}
+            style={styles.welcomeGradient}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}
           >
-            <FontAwesome5
-              name="user-shield"
-              size={24}
-              color="#fff"
-              style={styles.buttonIcon}
-            />
-            <Text style={styles.buttonText}>Panel de Administración</Text>
-          </TouchableOpacity>
-        )}
+            <View style={styles.welcomeContent}>
+              <FontAwesome5 name="shield-alt" size={28} color="#FFFFFF" style={styles.welcomeIcon} />
+              <View>
+                <Text style={styles.welcomeText}>Seguridad Ciudadana</Text>
+                <Text style={styles.welcomeSubtext}>Reporta incidentes en tu zona</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <FontAwesome5
-            name="sign-out-alt"
-            size={20}
-            color="#fff"
-            style={styles.buttonIcon}
-          />
+        <View style={styles.actionCardsContainer}>
+          <Text style={styles.sectionTitle}>Acciones rápidas</Text>
+          
+          <View style={styles.actionCards}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => navigation.navigate("Takephoto")}
+            >
+              <View style={[styles.actionIconBg, { backgroundColor: '#EF4444' }]}>
+                <FontAwesome5 name="camera" size={22} color="#fff" />
+              </View>
+              <Text style={styles.actionCardText}>Nuevo Reporte</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => navigation.navigate("Reportes")}
+            >
+              <View style={[styles.actionIconBg, { backgroundColor: '#10B981' }]}>
+                <FontAwesome5 name="clipboard-list" size={22} color="#fff" />
+              </View>
+              <Text style={styles.actionCardText}>Mis Reportes</Text>
+            </TouchableOpacity>
+            
+            {userInfo.role === "admin" && (
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => navigation.navigate("AdminScreen")}
+              >
+                <View style={[styles.actionIconBg, { backgroundColor: '#8B5CF6' }]}>
+                  <FontAwesome5 name="user-shield" size={22} color="#fff" />
+                </View>
+                <Text style={styles.actionCardText}>Panel Admin</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.recentReportsContainer}>
+          <Text style={styles.sectionTitle}>Reportes recientes</Text>
+          
+          {reportes.length > 0 ? (
+            <FlatList
+              data={reportes.slice(0, 3)}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentReportsList}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.recentReportCard}
+                  onPress={() => navigation.navigate("ReporteDetalle", { reportId: item.id })}
+                >
+                  <View style={[styles.reportTypeTag, { backgroundColor: getTipoColor(item.tipo || "General") }]}>
+                    <FontAwesome5 name={getTipoIcon(item.tipo || "General")} size={12} color="#fff" />
+                    <Text style={styles.reportTypeText}>{item.tipo || "General"}</Text>
+                  </View>
+                  
+                  <Text style={styles.recentReportTitle} numberOfLines={2}>
+                    {item.descripcion ? item.descripcion.substring(0, 60) : "Sin descripción"}
+                    {item.descripcion && item.descripcion.length > 60 ? "..." : ""}
+                  </Text>
+                  
+                  <View style={styles.recentReportFooter}>
+                    <Text style={styles.recentReportLocation}>
+                      <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" /> {item.ubicacion || "No especificada"}
+                    </Text>
+                    <Text style={styles.recentReportTime}>{formatTimestamp(item.creadoEn)}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <View style={styles.emptyReportsContainer}>
+              <FontAwesome5 name="clipboard" size={40} color="#CBD5E1" />
+              <Text style={styles.emptyReportsText}>No hay reportes recientes</Text>
+            </View>
+          )}
+        </View>
+
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={handleLogout}
+        >
+          <FontAwesome5 name="sign-out-alt" size={18} color="#FF5555" />
           <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f5f7fa",
+    backgroundColor: "#F1F5F9",
+  },
+  header: {
     paddingTop: 20,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#94A3B8",
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   notificationBell: {
-    position: "absolute",
-    top: 40,
-    right: 25,
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 50,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 5,
-    zIndex: 10,
+    marginRight: 15,
+    padding: 8,
   },
   badge: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    backgroundColor: "red",
-    borderRadius: 8,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    minWidth: 16,
+    top: 0,
+    right: 0,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -418,51 +585,248 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
   },
-  modalBackground: {
+  profileImageContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#3B82F6",
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+  },
+  profilePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInitial: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  content: {
     flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  welcomeCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 24,
+    elevation: 4,
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  welcomeGradient: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  welcomeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  welcomeIcon: {
+    marginRight: 15,
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  welcomeSubtext: {
+    fontSize: 14,
+    color: "#E0E7FF",
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 16,
+  },
+  actionCardsContainer: {
+    marginBottom: 24,
+  },
+  actionCards: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  actionCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    width: "30%",
+    alignItems: "center",
+    shadowColor: "#475569",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  actionIconBg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    marginBottom: 12,
+  },
+  actionCardText: {
+    fontSize: 13,
+    color: "#334155",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  recentReportsContainer: {
+    marginBottom: 20,
+  },
+  recentReportsList: {
+    paddingRight: 20,
+  },
+  recentReportCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    width: 230,
+    marginRight: 15,
+    shadowColor: "#475569",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  reportTypeTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 30,
+    alignSelf: "flex-start",
+    marginBottom: 10,
+  },
+  reportTypeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  recentReportTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 12,
+  },
+  recentReportFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  recentReportLocation: {
+    fontSize: 12,
+    color: "#64748B",
+    flex: 1,
+  },
+  recentReportTime: {
+    fontSize: 12,
+    color: "#94A3B8",
+    fontWeight: "500",
+  },
+  emptyReportsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 30,
+    shadowColor: "#475569",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  emptyReportsText: {
+    fontSize: 16,
+    color: "#94A3B8",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
   },
   modalContainer: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "85%",
-    maxHeight: "80%",
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 30,
+    height: "80%",
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#CBD5E1",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 15,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 16,
     textAlign: "center",
   },
   notificationList: {
-    maxHeight: 400,
+    maxHeight: "70%",
   },
   notificationItem: {
-    paddingVertical: 12,
+    flexDirection: "row",
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#F1F5F9",
+  },
+  notificationIconContainer: {
+    marginRight: 16,
+  },
+  notificationIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationContent: {
+    flex: 1,
   },
   newNotificationItem: {
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#F0F9FF",
   },
   notificationHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
   notificationText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#0F172A",
     flex: 1,
   },
   newBadge: {
-    backgroundColor: "#22c55e",
+    backgroundColor: "#10B981",
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 12,
   },
   newBadgeText: {
@@ -472,122 +836,77 @@ const styles = StyleSheet.create({
   },
   notificationBody: {
     fontSize: 14,
-    color: "#4b5563",
-    marginTop: 4,
+    color: "#475569",
+    marginBottom: 8,
+  },
+  notificationFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  notificationLocation: {
+    fontSize: 12,
+    color: "#64748B",
+    flex: 1,
   },
   notificationTime: {
     fontSize: 12,
-    color: "#6b7280",
-    marginTop: 4,
+    color: "#94A3B8",
+    fontWeight: "500",
+  },
+  emptyNotifications: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyNotificationsText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#94A3B8",
+    textAlign: "center",
   },
   loadingIndicator: {
     padding: 20,
   },
   viewAllButton: {
-    marginTop: 15,
-    backgroundColor: "#2563eb",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    marginTop: 20,
+    backgroundColor: "#3B82F6",
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
   },
   viewAllButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "600",
+    fontSize: 16,
   },
   closeButton: {
-    backgroundColor: "#d9534f",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 15,
+    marginTop: 12,
+    backgroundColor: "#F1F5F9",
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
   },
   closeButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "#64748B",
+    fontWeight: "600",
+    fontSize: 16,
   },
-  welcomeContainer: {
-    padding: 25,
-    borderRadius: 16,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-    width: "85%",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 30,
-    marginTop: 50,
-    flexDirection: "row",
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#334155",
-  },
-  profileButton: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+  logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-  },
-  profileButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    marginRight: 6,
-  },
-  profileIcon: {
-    marginLeft: 2,
-  },
-  buttonsContainer: {
-    width: "85%",
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#FF5555",
     marginTop: 10,
   },
-  mainButton: {
-    backgroundColor: "#2563eb",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonIcon: {
-    marginRight: 15,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  logoutButton: {
-    backgroundColor: "#d9534f",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginTop: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   logoutButtonText: {
-    color: "#fff",
+    color: "#FF5555",
+    marginLeft: 8,
+    fontWeight: "600",
     fontSize: 16,
-    fontWeight: "bold",
   },
 });
