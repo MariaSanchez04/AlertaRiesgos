@@ -202,7 +202,7 @@ export default function ReportListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#3F51B5" barStyle="light-content" />
-      
+
       <FlatList
         data={filteredReportes}
         keyExtractor={(item) => item.id}
@@ -211,7 +211,7 @@ export default function ReportListScreen() {
         renderItem={({ item }) => {
           const imagenes =
             item.imagenesUrls || (item.imagenUrl ? [item.imagenUrl] : []);
-          
+
           return (
             <View style={styles.reportCard}>
               {imagenes.length > 0 && (
@@ -292,7 +292,7 @@ export default function ReportListScreen() {
                     onPress={() => openEditModal(item)}
                   >
                     <Ionicons name="create-outline" size={18} color="#3F51B5" />
-                    <Text style={[styles.actionText, {color: "#3F51B5"}]}>Editar</Text>
+                    <Text style={[styles.actionText, { color: "#3F51B5" }]}>Editar</Text>
                   </TouchableOpacity>
 
                   {userRole === "admin" && (
@@ -314,7 +314,7 @@ export default function ReportListScreen() {
                       }
                     >
                       <Ionicons name="trash-outline" size={18} color="#F44336" />
-                      <Text style={[styles.actionText, {color: "#F44336"}]}>Eliminar</Text>
+                      <Text style={[styles.actionText, { color: "#F44336" }]}>Eliminar</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -325,20 +325,21 @@ export default function ReportListScreen() {
       />
 
       {/* Modal de imágenes */}
+      {/* Modal de imágenes */}
       <Modal transparent={true} visible={modalVisible} animationType="fade">
         <View style={styles.modalContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.closeModalButton}
             onPress={closeImageModal}
           >
             <Ionicons name="close" size={28} color="#FFF" />
           </TouchableOpacity>
-          
-          <ScrollView 
-            horizontal={false} 
-            pagingEnabled={true} 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.verticalModalContent}
+
+          <ScrollView
+            horizontal={true}
+            pagingEnabled={true}
+            showsHorizontalScrollIndicator={false}
+            style={styles.horizontalModalContent}
           >
             {selectedImages.map((url, index) => (
               <View key={index} style={styles.modalImageContainer}>
@@ -358,6 +359,7 @@ export default function ReportListScreen() {
         </View>
       </Modal>
 
+
       {/* Modal de edición */}
       <Modal
         visible={editModalVisible}
@@ -372,7 +374,7 @@ export default function ReportListScreen() {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            
+
             <TextInput
               style={styles.editInput}
               multiline
@@ -380,7 +382,7 @@ export default function ReportListScreen() {
               onChangeText={setEditDescripcion}
               placeholder="Describe el reporte de seguridad"
             />
-            
+
             <View style={styles.editButtons}>
               <TouchableOpacity
                 onPress={closeEditModal}
@@ -429,6 +431,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#333",
     marginBottom: 16,
+  },
+  horizontalModalContent: {
+    flex: 1,
+  },
+  modalImageContainer: {
+    width: width,            // igual al ancho de pantalla
+    height: "100%",          // ocupa todo el alto del modal
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalImage: {
+    width: width,
+    height: width,
+    resizeMode: "contain",
   },
   searchContainer: {
     flexDirection: "row",

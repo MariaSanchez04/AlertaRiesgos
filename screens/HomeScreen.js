@@ -78,29 +78,29 @@ const HomeScreen = ({ navigation }) => {
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
-    
-    const date = timestamp.seconds 
+
+    const date = timestamp.seconds
       ? new Date(timestamp.seconds * 1000)
       : timestamp.toDate && typeof timestamp.toDate === "function"
         ? timestamp.toDate()
-        : timestamp instanceof Date 
-          ? timestamp 
+        : timestamp instanceof Date
+          ? timestamp
           : null;
-          
+
     if (!date) return "Fecha no disponible";
-    
+
     // Formato más moderno y legible de fecha
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return "Hace un momento";
     if (diffMins < 60) return `Hace ${diffMins} min`;
     if (diffHours < 24) return `Hace ${diffHours} h`;
     if (diffDays < 7) return `Hace ${diffDays} días`;
-    
+
     return date.toLocaleDateString("es-ES", {
       day: "numeric",
       month: "short",
@@ -160,15 +160,6 @@ const HomeScreen = ({ navigation }) => {
     });
     return () => unsubscribe();
   }, [db]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigation.replace("Login");
-    } catch (error) {
-      Alert.alert("Error al cerrar sesión", error.message);
-    }
-  };
 
   const handleNotificationPress = (reportId) => {
     // Filtrar la notificación presionada de la lista de notificaciones
@@ -306,17 +297,17 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-      
+
       <LinearGradient
         colors={['#0F172A', '#1E293B']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Hola, {userInfo.firstName}</Text>
+            <Text style={[styles.greeting, { marginTop: 10 }]}>Hola, {userInfo.firstName}</Text>
             <Text style={styles.subtitle}>Manteniendo seguro tu barrio</Text>
           </View>
-          
+
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.notificationBell}
@@ -334,8 +325,8 @@ const HomeScreen = ({ navigation }) => {
                 </View>
               )}
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.profileImageContainer}
               onPress={() => navigation.navigate("Perfil")}
             >
@@ -366,13 +357,13 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHandle}></View>
-            
+
             <Text style={styles.modalTitle}>
               {viewingAllNotifications
                 ? "Todas las Notificaciones"
                 : "Notificaciones Recientes"}
             </Text>
-            
+
             {loading ? (
               <ActivityIndicator
                 size="large"
@@ -399,7 +390,7 @@ const HomeScreen = ({ navigation }) => {
                 )}
               </>
             )}
-            
+
             {!viewingAllNotifications && (
               <TouchableOpacity
                 onPress={fetchAllNotifications}
@@ -410,7 +401,7 @@ const HomeScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             )}
-            
+
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => {
@@ -429,8 +420,8 @@ const HomeScreen = ({ navigation }) => {
           <LinearGradient
             colors={['#3B82F6', '#2563EB']}
             style={styles.welcomeGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
           >
             <View style={styles.welcomeContent}>
               <FontAwesome5 name="shield-alt" size={28} color="#FFFFFF" style={styles.welcomeIcon} />
@@ -444,7 +435,7 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.actionCardsContainer}>
           <Text style={styles.sectionTitle}>Acciones rápidas</Text>
-          
+
           <View style={styles.actionCards}>
             <TouchableOpacity
               style={styles.actionCard}
@@ -455,7 +446,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.actionCardText}>Nuevo Reporte</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate("Reportes")}
@@ -465,7 +456,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.actionCardText}>Mis Reportes</Text>
             </TouchableOpacity>
-            
+
             {userInfo.role === "admin" && (
               <TouchableOpacity
                 style={styles.actionCard}
@@ -482,7 +473,7 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.recentReportsContainer}>
           <Text style={styles.sectionTitle}>Reportes recientes</Text>
-          
+
           {reportes.length > 0 ? (
             <FlatList
               data={reportes.slice(0, 3)}
@@ -491,7 +482,7 @@ const HomeScreen = ({ navigation }) => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.recentReportsList}
               renderItem={({ item }) => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.recentReportCard}
                   onPress={() => navigation.navigate("ReporteDetalle", { reportId: item.id })}
                 >
@@ -499,12 +490,12 @@ const HomeScreen = ({ navigation }) => {
                     <FontAwesome5 name={getTipoIcon(item.tipo || "General")} size={12} color="#fff" />
                     <Text style={styles.reportTypeText}>{item.tipo || "General"}</Text>
                   </View>
-                  
+
                   <Text style={styles.recentReportTitle} numberOfLines={2}>
                     {item.descripcion ? item.descripcion.substring(0, 60) : "Sin descripción"}
                     {item.descripcion && item.descripcion.length > 60 ? "..." : ""}
                   </Text>
-                  
+
                   <View style={styles.recentReportFooter}>
                     <Text style={styles.recentReportLocation}>
                       <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" /> {item.ubicacion || "No especificada"}
@@ -521,14 +512,6 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
         </View>
-
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={handleLogout}
-        >
-          <FontAwesome5 name="sign-out-alt" size={18} color="#FF5555" />
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -550,6 +533,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 3,
   },
   greeting: {
     fontSize: 24,
@@ -889,23 +874,6 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: "#64748B",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#FF5555",
-    marginTop: 10,
-  },
-  logoutButtonText: {
-    color: "#FF5555",
-    marginLeft: 8,
     fontWeight: "600",
     fontSize: 16,
   },
