@@ -436,8 +436,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalImageContainer: {
-    width: width,            // igual al ancho de pantalla
-    height: "100%",          // ocupa todo el alto del modal
+    width: width,           
+    height: "100%",          
     justifyContent: "center",
     alignItems: "center",
   },
