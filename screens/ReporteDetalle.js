@@ -6,12 +6,16 @@ import {
   ActivityIndicator,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
+  Modal,
+  Linking,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../src/config/firebaseConfig";
 import MapView, { Marker } from "react-native-maps";
 import moment from "moment";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ReporteDetalle() {
   const route = useRoute();
@@ -19,6 +23,23 @@ export default function ReporteDetalle() {
 
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(true);
+
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
+  const openMapModal = (lat, lng) => {
+    setSelectedLocation({ lat, lng });
+    setMapModalVisible(true);
+  };
+
+  const abrirEnGoogleMaps = () => {
+    if (selectedLocation) {
+      const url = `https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}`;
+      Linking.openURL(url).catch((err) =>
+        console.error("No se pudo abrir Google Maps:", err)
+      );
+    }
+  };
 
   useEffect(() => {
     const obtenerReporte = async () => {
@@ -61,53 +82,117 @@ export default function ReporteDetalle() {
     reporte.imagenesUrls || (reporte.imagenUrl ? [reporte.imagenUrl] : []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.titulo}>Detalle del Reporte</Text>
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.titulo}>Detalle del Reporte</Text>
 
-      {imagenes.map((url, index) => (
-        <Image
-          key={index}
-          source={{ uri: url }}
-          style={styles.imagen}
-          resizeMode="cover"
-        />
-      ))}
+        {imagenes.map((url, index) => (
+          <Image
+            key={index}
+            source={{ uri: url }}
+            style={styles.imagen}
+            resizeMode="cover"
+          />
+        ))}
 
-      <Text style={styles.descripcion}>
-        {reporte.descripcion || "Sin descripción"}
-      </Text>
+        <Text style={styles.descripcion}>
+          {reporte.descripcion || "Sin descripción"}
+        </Text>
 
-      {reporte.latitud && reporte.longitud ? (
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.mapa}
-            initialRegion={{
-              latitude: reporte.latitud,
-              longitude: reporte.longitud,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            }}
-          >
-            <Marker
-              coordinate={{
+        {reporte.latitud && reporte.longitud ? (
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.mapa}
+              initialRegion={{
                 latitude: reporte.latitud,
                 longitude: reporte.longitud,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
               }}
-            />
-          </MapView>
-        </View>
-      ) : (
-        <Text style={styles.ubicacion}>Ubicación no disponible</Text>
-      )}
+              scrollEnabled={false}
+              zoomEnabled={false}
+            >
+              <Marker
+                coordinate={{
+                  latitude: reporte.latitud,
+                  longitude: reporte.longitud,
+                }}
+              />
+            </MapView>
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={() =>
+                openMapModal(reporte.latitud, reporte.longitud)
+              }
+            >
+              <Text style={styles.mapButtonText}>Ver en mapa completo</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.ubicacion}>Ubicación no disponible</Text>
+        )}
 
-      <Text style={styles.fecha}>
-        {reporte.creadoEn
-          ? `Publicado el ${moment(reporte.creadoEn.toDate()).format(
-              "DD/MM/YYYY hh:mm A"
-            )}`
-          : "Fecha no disponible"}
-      </Text>
-    </ScrollView>
+        <Text style={styles.fecha}>
+          {reporte.creadoEn
+            ? `Publicado el ${moment(reporte.creadoEn.toDate()).format(
+                "DD/MM/YYYY hh:mm A"
+              )}`
+            : "Fecha no disponible"}
+        </Text>
+      </ScrollView>
+
+      <Modal visible={mapModalVisible} transparent={false} animationType="slide">
+        <View style={{ flex: 1 }}>
+          <MapView
+            style={{ flex: 1 }}
+            initialRegion={{
+              latitude: selectedLocation?.lat || 0,
+              longitude: selectedLocation?.lng || 0,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            {selectedLocation && (
+              <Marker
+                coordinate={{
+                  latitude: selectedLocation.lat,
+                  longitude: selectedLocation.lng,
+                }}
+              />
+            )}
+          </MapView>
+
+          <View style={{ padding: 16 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#3F51B5",
+                padding: 12,
+                borderRadius: 8,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+              onPress={abrirEnGoogleMaps}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>
+                Abrir en Google Maps
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setMapModalVisible(false)}
+              style={{
+                backgroundColor: "#E0E0E0",
+                padding: 12,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#333", fontWeight: "600" }}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -167,6 +252,18 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     borderRadius: 12,
+  },
+  mapButton: {
+    backgroundColor: "#3F51B5",
+    marginTop: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  mapButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
   ubicacion: {
     fontSize: 14,

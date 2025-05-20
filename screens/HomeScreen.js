@@ -12,6 +12,7 @@ import {
   Alert,
   SafeAreaView,
   Image,
+  ScrollView,
 } from "react-native";
 import { auth } from "../src/config/firebaseConfig";
 import { signOut } from "firebase/auth";
@@ -26,8 +27,12 @@ import {
   doc,
   getDoc,
   onSnapshot,
+  where,
+  Timestamp,
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRef } from "react"; // Ya puede estar importado por default
+
 
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -37,6 +42,7 @@ const HomeScreen = ({ navigation }) => {
     photoURL: "",
     role: "",
   });
+  const scrollRefMeses = useRef(null); // referencia al scroll horizontal de los meses
 
   const [reportes, setReportes] = useState([]);
   const [notificaciones, setNotificaciones] = useState([]);
@@ -48,6 +54,21 @@ const HomeScreen = ({ navigation }) => {
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const db = getFirestore();
 
+  // Nuevo estado para el filtro de fecha
+  const [filtroMes, setFiltroMes] = useState(new Date().getMonth());
+  const [filtroAnio, setFiltroAnio] = useState(new Date().getFullYear());
+  const [mostrarFiltro, setMostrarFiltro] = useState(false);
+  useEffect(() => {
+    if (mostrarFiltro && scrollRefMeses.current) {
+      setTimeout(() => {
+        scrollRefMeses.current.scrollTo({
+          x: filtroMes * 80, // Asume 80px por cada item aproximado (ajusta si es necesario)
+          animated: true,
+        });
+      }, 100); // Pequeño delay para asegurar que el ScrollView ya esté renderizado
+    }
+  }, [mostrarFiltro]);
+
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -55,6 +76,7 @@ const HomeScreen = ({ navigation }) => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
@@ -179,55 +201,142 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("ReporteDetalle", { reportId });
   };
 
-  const fetchAllNotifications = async () => {
+  // Función actualizada para cargar notificaciones según el mes y año seleccionados
+  const fetchNotificationsByDate = async (mes, anio) => {
     setLoading(true);
     try {
-      const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"));
+      // Crear fechas de inicio y fin para el filtro
+      const fechaInicio = new Date(anio, mes, 1);
+      const fechaFin = new Date(anio, mes + 1, 0, 23, 59, 59, 999); // Último día del mes
+
+      // Convertir a Timestamp para Firestore
+      const timestampInicio = Timestamp.fromDate(fechaInicio);
+      const timestampFin = Timestamp.fromDate(fechaFin);
+
+      // Consulta con filtro por fecha
+      const q = query(
+        collection(db, "reportes"),
+        where("creadoEn", ">=", timestampInicio),
+        where("creadoEn", "<=", timestampFin),
+        orderBy("creadoEn", "desc")
+      );
+
       const querySnapshot = await getDocs(q);
+
       const reportesData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      const ahora = new Date();
-      const mesActual = ahora.getMonth(); // 0 = Enero, 11 = Diciembre
-      const anioActual = ahora.getFullYear();
+      const notificacionesDelPeriodo = reportesData.map((reporte) => ({
+        id: reporte.id,
+        title: "Reporte",
+        body: reporte.descripcion
+          ? reporte.descripcion.substring(0, 50) + "..."
+          : "Sin descripción",
+        time: formatTimestamp(reporte.creadoEn),
+        leido: false,
+        isNew: false,
+        tipo: reporte.tipo || "General",
+        ubicacion: reporte.ubicacion || "No especificada",
+      }));
 
-      const notificacionesDelMes = reportesData
-        .filter((reporte) => {
-          const creadoEn =
-            reporte.creadoEn?.toDate?.() ?? new Date(reporte.creadoEn?.seconds * 1000);
-          return (
-            creadoEn instanceof Date &&
-            creadoEn.getMonth() === mesActual &&
-            creadoEn.getFullYear() === anioActual
-          );
-        })
-        .map((reporte) => ({
-          id: reporte.id,
-          title: "Reporte",
-          body: reporte.descripcion
-            ? reporte.descripcion.substring(0, 50) + "..."
-            : "Sin descripción",
-          time: formatTimestamp(reporte.creadoEn),
-          leido: false,
-          isNew: false,
-          tipo: reporte.tipo || "General",
-          ubicacion: reporte.ubicacion || "No especificada",
-        }));
-
-      setAllNotificaciones(notificacionesDelMes);
-      setNotificaciones([]);
-      setCantidadNotificaciones(0);
+      setAllNotificaciones(notificacionesDelPeriodo);
       setViewingAllNotifications(true);
     } catch (error) {
+      console.error("Error al cargar notificaciones:", error);
       Alert.alert("Error", "No se pudieron cargar las notificaciones");
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchAllNotifications = async () => {
+    // Usar la nueva función con el mes y año actuales
+    await fetchNotificationsByDate(filtroMes, filtroAnio);
 
+    // Eliminar las notificaciones recientes del contador
+    setNotificaciones([]);
+    setCantidadNotificaciones(0);
+  };
+
+  // Nombres de los meses en español
+  const nombresMeses = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+
+  // Array de años para seleccionar (año actual y 2 años anteriores)
+  const aniosDisponibles = [
+    new Date().getFullYear(),
+    new Date().getFullYear() - 1,
+    new Date().getFullYear() - 2,
+
+  ];
+
+  // Componente para seleccionar mes y año
+  const renderFiltroFecha = () => (
+    <View style={styles.filtroContainer}>
+      <Text style={styles.filtroTitle}>Seleccionar Fecha</Text>
+
+      <View style={styles.filtroOptions}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.mesesScrollView}
+           ref={scrollRefMeses}
+        >
+          {nombresMeses.map((mes, index) => (
+            <TouchableOpacity
+              key={`mes-${index}`}
+              style={[
+                styles.filtroItem,
+                filtroMes === index && styles.filtroItemSelected
+              ]}
+              onPress={() => {
+                setFiltroMes(index);
+                fetchNotificationsByDate(index, filtroAnio);
+              }}
+            >
+              <Text
+                style={[
+                  styles.filtroItemText,
+                  filtroMes === index && styles.filtroItemTextSelected
+                ]}
+              >
+                {mes}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.aniosContainer}>
+          {aniosDisponibles.map((anio) => (
+            <TouchableOpacity
+              key={`anio-${anio}`}
+              style={[
+                styles.filtroItem,
+                filtroAnio === anio && styles.filtroItemSelected
+              ]}
+              onPress={() => {
+                setFiltroAnio(anio);
+                fetchNotificationsByDate(filtroMes, anio);
+              }}
+            >
+              <Text
+                style={[
+                  styles.filtroItemText,
+                  filtroAnio === anio && styles.filtroItemTextSelected
+                ]}
+              >
+                {anio}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
 
   // Iconos para los diferentes tipos de reportes
   const getTipoIcon = (tipo) => {
@@ -356,6 +465,7 @@ const HomeScreen = ({ navigation }) => {
         onRequestClose={() => {
           setModalVisible(false);
           setViewingAllNotifications(false);
+          setMostrarFiltro(false);
         }}
       >
         <View style={styles.modalBackground}>
@@ -364,9 +474,36 @@ const HomeScreen = ({ navigation }) => {
 
             <Text style={styles.modalTitle}>
               {viewingAllNotifications
-                ? "Todas las Notificaciones"
+                ? "Historial de Notificaciones"
                 : "Notificaciones Recientes"}
             </Text>
+
+            {/* Mostrar filtro de fecha solo cuando se ven todas las notificaciones */}
+            {viewingAllNotifications && (
+              <>
+                <View style={styles.filtroHeader}>
+                  <Text style={styles.filtroLabel}>
+                    {nombresMeses[filtroMes]} {filtroAnio}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.filtroToggleButton}
+                    onPress={() => setMostrarFiltro(!mostrarFiltro)}
+                  >
+                    <Text style={styles.filtroToggleText}>
+                      {mostrarFiltro ? "Ocultar filtro" : "Cambiar fecha"}
+                    </Text>
+                    <FontAwesome5
+                      name={mostrarFiltro ? "chevron-up" : "chevron-down"}
+                      size={12}
+                      color="#3B82F6"
+                      style={{ marginLeft: 5 }}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {mostrarFiltro && renderFiltroFecha()}
+              </>
+            )}
 
             {loading ? (
               <ActivityIndicator
@@ -388,7 +525,9 @@ const HomeScreen = ({ navigation }) => {
                   <View style={styles.emptyNotifications}>
                     <FontAwesome5 name="bell-slash" size={48} color="#CBD5E1" />
                     <Text style={styles.emptyNotificationsText}>
-                      No hay notificaciones recientes
+                      {viewingAllNotifications
+                        ? `No hay notificaciones en ${nombresMeses[filtroMes]} ${filtroAnio}`
+                        : "No hay notificaciones recientes"}
                     </Text>
                   </View>
                 )}
@@ -401,7 +540,7 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.viewAllButton}
               >
                 <Text style={styles.viewAllButtonText}>
-                  Ver todas las notificaciones
+                  Ver historial de notificaciones
                 </Text>
               </TouchableOpacity>
             )}
@@ -411,6 +550,7 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => {
                 setModalVisible(false);
                 setViewingAllNotifications(false);
+                setMostrarFiltro(false);
               }}
             >
               <Text style={styles.closeButtonText}>Cerrar</Text>
@@ -880,5 +1020,57 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "600",
     fontSize: 16,
+  },
+  filtroContainer: {
+    padding: 16,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  filtroTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  filtroOptions: {
+    flexDirection: 'column',
+  },
+  mesesScrollView: {
+    paddingHorizontal: 4,
+    paddingBottom: 8,
+  },
+  filtroItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 20,
+    marginHorizontal: 6,
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  filtroItemSelected: {
+    backgroundColor: '#1D4ED8',
+    borderColor: '#1E40AF',
+  },
+  filtroItemText: {
+    color: '#334155',
+    fontWeight: '500',
+  },
+  filtroItemTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  aniosContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 10,
   },
 });

@@ -37,6 +37,9 @@ import moment from "moment";
 const { width } = Dimensions.get("window");
 
 export default function ReportListScreen() {
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,6 +51,10 @@ export default function ReportListScreen() {
   const [selectedReporte, setSelectedReporte] = useState(null);
   const [editDescripcion, setEditDescripcion] = useState("");
   const [userRole, setUserRole] = useState("");
+  const openMapModal = (lat, lng) => {
+    setSelectedLocation({ lat, lng });
+    setMapModalVisible(true);
+  };
 
   useEffect(() => {
     const obtenerDatosUsuario = async () => {
@@ -275,9 +282,13 @@ export default function ReportListScreen() {
                         }}
                       />
                     </MapView>
-                    <TouchableOpacity style={styles.mapButton}>
+                    <TouchableOpacity
+                      style={styles.mapButton}
+                      onPress={() => openMapModal(item.latitud, item.longitud)}
+                    >
                       <Text style={styles.mapButtonText}>Ver en mapa completo</Text>
                     </TouchableOpacity>
+
                   </View>
                 ) : (
                   <View style={styles.noLocationContainer}>
@@ -323,8 +334,43 @@ export default function ReportListScreen() {
           );
         }}
       />
+      <Modal visible={mapModalVisible} transparent={false} animationType="slide">
+        <View style={{ flex: 1 }}>
+          <MapView
+            style={{ flex: 1 }}
+            initialRegion={{
+              latitude: selectedLocation?.lat || 0,
+              longitude: selectedLocation?.lng || 0,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            {selectedLocation && (
+              <Marker
+                coordinate={{
+                  latitude: selectedLocation.lat,
+                  longitude: selectedLocation.lng,
+                }}
+              />
+            )}
+          </MapView>
+          <TouchableOpacity
+            onPress={() => setMapModalVisible(false)}
+            style={{
+              position: "absolute",
+              top: 40,
+              right: 20,
+              backgroundColor: "#FFF",
+              padding: 10,
+              borderRadius: 30,
+              elevation: 5,
+            }}
+          >
+            <Ionicons name="close" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
-      {/* Modal de imágenes */}
       {/* Modal de imágenes */}
       <Modal transparent={true} visible={modalVisible} animationType="fade">
         <View style={styles.modalContainer}>
@@ -436,8 +482,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalImageContainer: {
-    width: width,           
-    height: "100%",          
+    width: width,
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
