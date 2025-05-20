@@ -179,51 +179,55 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("ReporteDetalle", { reportId });
   };
 
-  const fetchAllNotifications = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"));
-      const querySnapshot = await getDocs(q);
-      const reportesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+const fetchAllNotifications = async () => {
+  setLoading(true);
+  try {
+    const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"));
+    const querySnapshot = await getDocs(q);
+    const reportesData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const ahora = new Date();
+    const mesActual = ahora.getMonth(); // 0 = Enero, 11 = Diciembre
+    const anioActual = ahora.getFullYear();
+
+    const notificacionesDelMes = reportesData
+      .filter((reporte) => {
+        const creadoEn =
+          reporte.creadoEn?.toDate?.() ?? new Date(reporte.creadoEn?.seconds * 1000);
+        return (
+          creadoEn instanceof Date &&
+          creadoEn.getMonth() === mesActual &&
+          creadoEn.getFullYear() === anioActual
+        );
+      })
+      .map((reporte) => ({
+        id: reporte.id,
+        title: "Reporte",
+        body: reporte.descripcion
+          ? reporte.descripcion.substring(0, 50) + "..."
+          : "Sin descripción",
+        time: formatTimestamp(reporte.creadoEn),
+        leido: false,
+        isNew: false,
+        tipo: reporte.tipo || "General",
+        ubicacion: reporte.ubicacion || "No especificada",
       }));
 
-      // Obtener la hora actual y calcular el rango de la última hora
-      const ahora = new Date();
-      const rangoDeTiempo = new Date(ahora.getTime() - 60 * 60 * 1000); // Última hora
+    setAllNotificaciones(notificacionesDelMes);
+    setNotificaciones([]);
+    setCantidadNotificaciones(0);
+    setViewingAllNotifications(true);
+  } catch (error) {
+    Alert.alert("Error", "No se pudieron cargar las notificaciones");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Filtrar las notificaciones creadas en la última hora
-      const todasLasNotificaciones = reportesData
-        .filter((reporte) => {
-          const creadoEn =
-            reporte.creadoEn?.toDate?.() ??
-            new Date(reporte.creadoEn?.seconds * 1000);
-          return creadoEn > rangoDeTiempo;
-        })
-        .map((reporte) => ({
-          id: reporte.id,
-          title: "Reporte",
-          body: reporte.descripcion
-            ? reporte.descripcion.substring(0, 50) + "..."
-            : "Sin descripción",
-          time: formatTimestamp(reporte.creadoEn),
-          leido: false,
-          isNew: false, // Marcar como no nuevas al ver todas
-          tipo: reporte.tipo || "General",
-          ubicacion: reporte.ubicacion || "No especificada",
-        }));
 
-      setAllNotificaciones(todasLasNotificaciones);
-      setNotificaciones([]); // Limpiar las notificaciones nuevas
-      setCantidadNotificaciones(0); // Reiniciar el contador de notificaciones nuevas
-      setViewingAllNotifications(true);
-    } catch (error) {
-      Alert.alert("Error", "No se pudieron cargar las notificaciones");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Iconos para los diferentes tipos de reportes
   const getTipoIcon = (tipo) => {
