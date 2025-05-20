@@ -55,26 +55,26 @@ const HomeScreen = ({ navigation }) => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
-
   useEffect(() => {
-    const fetchUserData = async () => {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserInfo({
-            firstName: data.firstName || "",
-            lastName: data.lastName || "",
-            email: data.email || "",
-            photoURL: data.photoURL || "",
-            role: data.role || "",
-          });
-        }
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserInfo({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          photoURL: data.photoURL || "",
+          role: data.role || "",
+        });
       }
-    };
-    fetchUserData();
+    });
+
+    return () => unsubscribe(); // Limpieza al desmontar
   }, []);
+
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
@@ -179,53 +179,53 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate("ReporteDetalle", { reportId });
   };
 
-const fetchAllNotifications = async () => {
-  setLoading(true);
-  try {
-    const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"));
-    const querySnapshot = await getDocs(q);
-    const reportesData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const ahora = new Date();
-    const mesActual = ahora.getMonth(); // 0 = Enero, 11 = Diciembre
-    const anioActual = ahora.getFullYear();
-
-    const notificacionesDelMes = reportesData
-      .filter((reporte) => {
-        const creadoEn =
-          reporte.creadoEn?.toDate?.() ?? new Date(reporte.creadoEn?.seconds * 1000);
-        return (
-          creadoEn instanceof Date &&
-          creadoEn.getMonth() === mesActual &&
-          creadoEn.getFullYear() === anioActual
-        );
-      })
-      .map((reporte) => ({
-        id: reporte.id,
-        title: "Reporte",
-        body: reporte.descripcion
-          ? reporte.descripcion.substring(0, 50) + "..."
-          : "Sin descripción",
-        time: formatTimestamp(reporte.creadoEn),
-        leido: false,
-        isNew: false,
-        tipo: reporte.tipo || "General",
-        ubicacion: reporte.ubicacion || "No especificada",
+  const fetchAllNotifications = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, "reportes"), orderBy("creadoEn", "desc"));
+      const querySnapshot = await getDocs(q);
+      const reportesData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
       }));
 
-    setAllNotificaciones(notificacionesDelMes);
-    setNotificaciones([]);
-    setCantidadNotificaciones(0);
-    setViewingAllNotifications(true);
-  } catch (error) {
-    Alert.alert("Error", "No se pudieron cargar las notificaciones");
-  } finally {
-    setLoading(false);
-  }
-};
+      const ahora = new Date();
+      const mesActual = ahora.getMonth(); // 0 = Enero, 11 = Diciembre
+      const anioActual = ahora.getFullYear();
+
+      const notificacionesDelMes = reportesData
+        .filter((reporte) => {
+          const creadoEn =
+            reporte.creadoEn?.toDate?.() ?? new Date(reporte.creadoEn?.seconds * 1000);
+          return (
+            creadoEn instanceof Date &&
+            creadoEn.getMonth() === mesActual &&
+            creadoEn.getFullYear() === anioActual
+          );
+        })
+        .map((reporte) => ({
+          id: reporte.id,
+          title: "Reporte",
+          body: reporte.descripcion
+            ? reporte.descripcion.substring(0, 50) + "..."
+            : "Sin descripción",
+          time: formatTimestamp(reporte.creadoEn),
+          leido: false,
+          isNew: false,
+          tipo: reporte.tipo || "General",
+          ubicacion: reporte.ubicacion || "No especificada",
+        }));
+
+      setAllNotificaciones(notificacionesDelMes);
+      setNotificaciones([]);
+      setCantidadNotificaciones(0);
+      setViewingAllNotifications(true);
+    } catch (error) {
+      Alert.alert("Error", "No se pudieron cargar las notificaciones");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -480,7 +480,7 @@ const fetchAllNotifications = async () => {
 
           {reportes.length > 0 ? (
             <FlatList
-              data={reportes.slice(0, 3)}
+              data={reportes.slice(0, 5)}
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
