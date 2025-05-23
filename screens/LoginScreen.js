@@ -92,38 +92,53 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.gradientBackground}>
         <View style={styles.cityBuildings}>
           {/* Siluetas de edificios simplificadas */}
-          <View style={[styles.building, { height: 120, width: 60, left: '5%' }]} />
-          <View style={[styles.building, { height: 180, width: 70, left: '15%' }]} />
-          <View style={[styles.building, { height: 140, width: 80, left: '30%' }]} />
-          <View style={[styles.building, { height: 200, width: 65, left: '45%' }]} />
-          <View style={[styles.building, { height: 160, width: 70, left: '60%' }]} />
-          <View style={[styles.building, { height: 130, width: 50, left: '75%' }]} />
-          <View style={[styles.building, { height: 170, width: 60, left: '85%' }]} />
+          <View
+            style={[styles.building, { height: 120, width: 60, left: "5%" }]}
+          />
+          <View
+            style={[styles.building, { height: 180, width: 70, left: "15%" }]}
+          />
+          <View
+            style={[styles.building, { height: 140, width: 80, left: "30%" }]}
+          />
+          <View
+            style={[styles.building, { height: 200, width: 65, left: "45%" }]}
+          />
+          <View
+            style={[styles.building, { height: 160, width: 70, left: "60%" }]}
+          />
+          <View
+            style={[styles.building, { height: 130, width: 50, left: "75%" }]}
+          />
+          <View
+            style={[styles.building, { height: 170, width: 60, left: "85%" }]}
+          />
         </View>
       </View>
     );
   };
 
-  // Elementos estrellas para el cielo nocturno
-  const starSky = Array(30).fill().map((_, i) => {
-    const size = Math.random() * 2 + 1;
-    const opacity = Math.random() * 0.7 + 0.3;
-    return (
-      <View
-        key={i}
-        style={{
-          position: 'absolute',
-          width: size,
-          height: size,
-          backgroundColor: '#FFFFFF',
-          borderRadius: size / 2,
-          top: `${Math.random() * 50}%`,
-          left: `${Math.random() * 100}%`,
-          opacity: opacity,
-        }}
-      />
-    );
-  });
+  const starSky = Array(30)
+    .fill()
+    .map((_, i) => {
+      const size = Math.random() * 2 + 1;
+      const opacity = Math.random() * 0.7 + 0.3;
+      return (
+        <View
+          key={i}
+          style={{
+            position: "absolute",
+            width: size,
+            height: size,
+            backgroundColor: "#FFFFFF",
+            borderRadius: size / 2,
+            top: `${Math.random() * 50}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: opacity,
+          }}
+        />
+      );
+    });
 
   return (
     <KeyboardAvoidingView
@@ -134,23 +149,28 @@ export default function LoginScreen({ navigation }) {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <StatusBar barStyle="light-content" />
           <View style={styles.backgroundImage}>
-            <View style={styles.gradientBackground}>
-              {starSky}
-            </View>
+            <View style={styles.gradientBackground}>{starSky}</View>
             {cityGradientBackground()}
             <View style={styles.overlay} />
-            
+
             <View style={styles.headerContainer}>
               <MaterialIcons name="security" size={48} color="#ffffff" />
               <Text style={styles.appName}>Alerta riesgos</Text>
-              <Text style={styles.tagline}>Reportando por una ciudad más segura</Text>
+              <Text style={styles.tagline}>
+                Reportando por una ciudad más segura
+              </Text>
             </View>
 
             <View style={styles.formContainer}>
-              <Text style={styles.title}>Iniciar Sesión</Text>
+              <Text style={styles.title}>Iniciar sesión</Text>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="mail-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Correo electrónico"
                   style={styles.input}
@@ -163,7 +183,12 @@ export default function LoginScreen({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Contraseña"
                   style={styles.input}
@@ -173,8 +198,8 @@ export default function LoginScreen({ navigation }) {
                   autoCapitalize="none"
                   placeholderTextColor="#888"
                 />
-                <TouchableOpacity 
-                  style={styles.eyeIcon} 
+                <TouchableOpacity
+                  style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   <Ionicons
@@ -207,11 +232,13 @@ export default function LoginScreen({ navigation }) {
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.forgotPasswordLink}
                 onPress={() => navigation.navigate("ForgotPassword")}
               >
-                <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+                <Text style={styles.forgotPasswordText}>
+                  ¿Olvidaste tu contraseña?
+                </Text>
               </TouchableOpacity>
 
               <View style={styles.divider}>
@@ -220,11 +247,13 @@ export default function LoginScreen({ navigation }) {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity 
-                style={styles.registerButton} 
+              <TouchableOpacity
+                style={styles.registerButton}
                 onPress={() => navigation.navigate("Register")}
               >
-                <Text style={styles.registerButtonText}>Crear una cuenta nueva</Text>
+                <Text style={styles.registerButtonText}>
+                  Crear una cuenta nueva
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -279,17 +308,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
     marginTop: 10,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   tagline: {
     fontSize: 16,
     color: "#cce0ff",
     marginTop: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   formContainer: {
     width: width * 0.88,
@@ -383,7 +412,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20, 
+    marginBottom: 20,
   },
   dividerLine: {
     flex: 1,

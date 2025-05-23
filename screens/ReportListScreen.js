@@ -11,12 +11,9 @@ import {
   Modal,
   ScrollView,
   Alert,
-  StatusBar,
-  SafeAreaView,
-  Dimensions,
+  Linking,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   db,
   auth,
@@ -33,13 +30,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import moment from "moment";
-
-const { width } = Dimensions.get("window");
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ReportListScreen() {
-  const [mapModalVisible, setMapModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,11 +44,9 @@ export default function ReportListScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedReporte, setSelectedReporte] = useState(null);
   const [editDescripcion, setEditDescripcion] = useState("");
-  const [userRole, setUserRole] = useState("");
-  const openMapModal = (lat, lng) => {
-    setSelectedLocation({ lat, lng });
-    setMapModalVisible(true);
-  };
+  const [userRole, setUserRole] = useState(""); // Nuevo estado para el rol del usuario
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     const obtenerDatosUsuario = async () => {
@@ -62,7 +54,7 @@ export default function ReportListScreen() {
         const user = auth.currentUser;
         if (user) {
           const userData = await getUserData(user.uid);
-          setUserRole(userData?.role || "");
+          setUserRole(userData?.role || ""); // Guardar el rol del usuario
         }
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
@@ -79,7 +71,7 @@ export default function ReportListScreen() {
           return {
             id: doc.id,
             ...reporte,
-            correoUsuario: reporte.correoUsuario || "Correo no disponible",
+            correoUsuario: reporte.correoUsuario || "Correo no disponible", // Asignar valor predeterminado
           };
         });
         setReportes(data);
@@ -90,8 +82,8 @@ export default function ReportListScreen() {
       }
     };
 
-    obtenerDatosUsuario();
-    obtenerReportes();
+    obtenerDatosUsuario(); // Obtener el rol del usuario
+    obtenerReportes(); // Obtener los reportes
   }, []);
 
   useEffect(() => {
@@ -142,85 +134,63 @@ export default function ReportListScreen() {
       );
 
       closeEditModal();
-      Alert.alert("Éxito", "Reporte actualizado correctamente");
     } catch (error) {
       console.error("Error al actualizar reporte:", error);
-      Alert.alert("Error", "No se pudo actualizar el reporte");
     }
   };
 
   const eliminarReporte = async (reporteId) => {
     try {
-      await deleteDoc(doc(db, "reportes", reporteId));
-      setReportes((prev) => prev.filter((r) => r.id !== reporteId));
-      Alert.alert("Éxito", "Reporte eliminado correctamente");
+      await deleteDoc(doc(db, "reportes", reporteId)); // Eliminar el reporte de Firestore
+      setReportes((prev) => prev.filter((r) => r.id !== reporteId)); // Actualizar la lista local
+      Alert.alert("Éxito", "Reporte eliminado correctamente.");
     } catch (error) {
       console.error("Error al eliminar el reporte:", error);
-      Alert.alert("Error", "No se pudo eliminar el reporte");
+      Alert.alert("Error", "No se pudo eliminar el reporte.");
     }
-  };
-
-  const renderHeader = () => {
-    return (
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Reportes de Seguridad</Text>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por descripción"
-            placeholderTextColor="#888"
-            value={searchTerm}
-            onChangeText={handleSearch}
-          />
-          {searchTerm.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchTerm("")}>
-              <Ionicons name="close-circle" size={20} color="#888" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
   };
 
   if (cargando) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F51B5" />
-        <Text style={styles.loadingText}>Cargando reportes...</Text>
-      </SafeAreaView>
+      <ActivityIndicator size="large" color="blue" style={styles.loading} />
     );
   }
 
   if (filteredReportes.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        {renderHeader()}
-        <View style={styles.emptyContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#888" />
-          <Text style={styles.noReports}>
-            No hay reportes que coincidan con la búsqueda.
-          </Text>
-        </View>
-      </SafeAreaView>
+      <Text style={styles.noReports}>
+        No hay reportes que coincidan con la búsqueda.
+      </Text>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#3F51B5" barStyle="light-content" />
-
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.headerBackButton}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <Ionicons name="arrow-back" size={28} color="#1E293B" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Reportes</Text>
+      </View>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Buscar por descripción"
+        value={searchTerm}
+        onChangeText={handleSearch}
+      />
       <FlatList
         data={filteredReportes}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
-        ListHeaderComponent={renderHeader}
         renderItem={({ item }) => {
           const imagenes =
             item.imagenesUrls || (item.imagenUrl ? [item.imagenUrl] : []);
-
           return (
             <View style={styles.reportCard}>
+              {/* Imagen principal con contador si hay más */}
               {imagenes.length > 0 && (
                 <TouchableOpacity onPress={() => openImageModal(imagenes, 0)}>
                   <Image
@@ -229,9 +199,9 @@ export default function ReportListScreen() {
                     resizeMode="cover"
                   />
                   {imagenes.length > 1 && (
-                    <View style={styles.moreImagesIndicator}>
-                      <Ionicons name="images" size={18} color="#FFF" />
-                      <Text style={styles.moreImagesText}>
+                    <View style={styles.imageCountOverlay}>
+                      <Ionicons name="images" size={20} color="#fff" />
+                      <Text style={styles.imageCountText}>
                         +{imagenes.length - 1}
                       </Text>
                     </View>
@@ -239,172 +209,132 @@ export default function ReportListScreen() {
                 </TouchableOpacity>
               )}
 
-              <View style={styles.reportContent}>
-                <Text style={styles.descripcion}>{item.descripcion}</Text>
+              {/* Descripción */}
+              <Text style={styles.descripcion}>{item.descripcion}</Text>
 
-                <View style={styles.metaDataContainer}>
-                  {item.creadoEn && (
-                    <View style={styles.metaDataItem}>
-                      <Ionicons name="time-outline" size={14} color="#777" />
-                      <Text style={styles.metaDataText}>
-                        {moment(item.creadoEn.toDate()).format("DD/MM/YYYY hh:mm A")}
-                      </Text>
-                    </View>
-                  )}
-
-                  {userRole === "admin" && (
-                    <View style={styles.metaDataItem}>
-                      <Ionicons name="person-outline" size={14} color="#777" />
-                      <Text style={styles.metaDataText}>
-                        {item.correoUsuario}
-                      </Text>
-                    </View>
-                  )}
+              {/* Fecha y correo con íconos */}
+              <View style={styles.infoRow}>
+                <Ionicons
+                  name="time-outline"
+                  size={18}
+                  color="#64748B"
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={styles.infoText}>
+                  {item.creadoEn
+                    ? moment(item.creadoEn.toDate()).format("DD/MM/YYYY hh:mm A")
+                    : "Fecha no disponible"}
+                </Text>
+              </View>
+              {userRole === "admin" && (
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name="person-outline"
+                    size={18}
+                    color="#64748B"
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={styles.infoText}>{item.correoUsuario}</Text>
                 </View>
+              )}
 
-                {item.latitud && item.longitud ? (
-                  <View style={styles.mapContainer}>
-                    <MapView
-                      style={styles.map}
-                      initialRegion={{
+              {/* Mapa y botón */}
+              {item.latitud && item.longitud ? (
+                <View style={styles.mapContainer}>
+                  <MapView
+                    style={styles.map}
+                    initialRegion={{
+                      latitude: item.latitud,
+                      longitude: item.longitud,
+                      latitudeDelta: 0.005,
+                      longitudeDelta: 0.005,
+                    }}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                  >
+                    <Marker
+                      coordinate={{
                         latitude: item.latitud,
                         longitude: item.longitud,
-                        latitudeDelta: 0.005,
-                        longitudeDelta: 0.005,
                       }}
-                      scrollEnabled={false}
-                      zoomEnabled={false}
-                    >
-                      <Marker
-                        coordinate={{
-                          latitude: item.latitud,
-                          longitude: item.longitud,
-                        }}
-                      />
-                    </MapView>
-                    <TouchableOpacity
-                      style={styles.mapButton}
-                      onPress={() => openMapModal(item.latitud, item.longitud)}
-                    >
-                      <Text style={styles.mapButtonText}>Ver en mapa completo</Text>
-                    </TouchableOpacity>
-
-                  </View>
-                ) : (
-                  <View style={styles.noLocationContainer}>
-                    <Ionicons name="location-off-outline" size={16} color="#888" />
-                    <Text style={styles.locationText}>Ubicación no disponible</Text>
-                  </View>
-                )}
-
-                <View style={styles.actionsContainer}>
+                    />
+                  </MapView>
                   <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => openEditModal(item)}
+                    style={styles.mapButton}
+                    // Aquí podrías abrir un modal de mapa completo si lo implementas
+                    onPress={() => {
+                      const url = `https://www.google.com/maps?q=${item.latitud},${item.longitud}`;
+                      Linking.openURL(url);
+                    }}
                   >
-                    <Ionicons name="create-outline" size={18} color="#3F51B5" />
-                    <Text style={[styles.actionText, { color: "#3F51B5" }]}>Editar</Text>
+                    <Text style={styles.mapButtonText}>Ver en google maps</Text>
                   </TouchableOpacity>
-
-                  {userRole === "admin" && (
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() =>
-                        Alert.alert(
-                          "Confirmar eliminación",
-                          "¿Estás seguro de que deseas eliminar este reporte?",
-                          [
-                            { text: "Cancelar", style: "cancel" },
-                            {
-                              text: "Eliminar",
-                              onPress: () => eliminarReporte(item.id),
-                              style: "destructive",
-                            },
-                          ]
-                        )
-                      }
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#F44336" />
-                      <Text style={[styles.actionText, { color: "#F44336" }]}>Eliminar</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
+              ) : (
+                <Text style={styles.locationText}>Ubicación no disponible</Text>
+              )}
+
+              {/* Botones de acción */}
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => openEditModal(item)}
+                >
+                  <Ionicons name="create-outline" size={18} color="#2563EB" />
+                  <Text style={styles.editButtonText}>Editar</Text>
+                </TouchableOpacity>
+                {userRole === "admin" && (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() =>
+                      Alert.alert(
+                        "Confirmar eliminación",
+                        `¿Estás seguro de que deseas eliminar este reporte?`,
+                        [
+                          { text: "Cancelar", style: "cancel" },
+                          {
+                            text: "Eliminar",
+                            onPress: () => eliminarReporte(item.id),
+                          },
+                        ]
+                      )
+                    }
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           );
         }}
       />
-      <Modal visible={mapModalVisible} transparent={false} animationType="slide">
-        <View style={{ flex: 1 }}>
-          <MapView
-            style={{ flex: 1 }}
-            initialRegion={{
-              latitude: selectedLocation?.lat || 0,
-              longitude: selectedLocation?.lng || 0,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            {selectedLocation && (
-              <Marker
-                coordinate={{
-                  latitude: selectedLocation.lat,
-                  longitude: selectedLocation.lng,
-                }}
-              />
-            )}
-          </MapView>
-          <TouchableOpacity
-            onPress={() => setMapModalVisible(false)}
-            style={{
-              position: "absolute",
-              top: 40,
-              right: 20,
-              backgroundColor: "#FFF",
-              padding: 10,
-              borderRadius: 30,
-              elevation: 5,
-            }}
-          >
-            <Ionicons name="close" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </Modal>
 
       {/* Modal de imágenes */}
-      <Modal transparent={true} visible={modalVisible} animationType="fade">
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={closeImageModal}
-          >
-            <Ionicons name="close" size={28} color="#FFF" />
-          </TouchableOpacity>
-
-          <ScrollView
-            horizontal={true}
-            pagingEnabled={true}
-            showsHorizontalScrollIndicator={false}
-            style={styles.horizontalModalContent}
-          >
-            {selectedImages.map((url, index) => (
-              <View key={index} style={styles.modalImageContainer}>
-                <Image
-                  source={{ uri: url }}
-                  style={styles.modalImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.imageCounter}>
-                  <Text style={styles.imageCounterText}>
-                    {index + 1}/{selectedImages.length}
-                  </Text>
+      {modalVisible && (
+        <Modal transparent={true} visible={modalVisible} animationType="fade">
+          <View style={styles.modalContainer}>
+            <ScrollView contentContainerStyle={styles.verticalModalContent}>
+              {selectedImages.map((url, index) => (
+                <View key={index} style={styles.modalImageContainer}>
+                  <Image
+                    source={{ uri: url }}
+                    style={styles.modalImage}
+                    resizeMode="contain"
+                  />
                 </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
+              ))}
+            </ScrollView>
 
+            <TouchableOpacity
+              onPress={closeImageModal}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      )}
 
       {/* Modal de edición */}
       <Modal
@@ -414,328 +344,286 @@ export default function ReportListScreen() {
       >
         <View style={styles.editModalContainer}>
           <View style={styles.editModalContent}>
-            <View style={styles.editModalHeader}>
-              <Text style={styles.editModalTitle}>Editar descripción</Text>
-              <TouchableOpacity onPress={closeEditModal}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
+            <Text style={styles.editModalTitle}>Editar descripción</Text>
             <TextInput
               style={styles.editInput}
               multiline
               value={editDescripcion}
               onChangeText={setEditDescripcion}
-              placeholder="Describe el reporte de seguridad"
             />
-
             <View style={styles.editButtons}>
               <TouchableOpacity
                 onPress={closeEditModal}
                 style={styles.cancelButton}
               >
-                <Text style={styles.buttonText}>Cancelar</Text>
+                <Text style={{ color: "white" }}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={guardarCambios}
                 style={styles.saveButton}
               >
-                <Text style={styles.buttonText}>Guardar</Text>
+                <Text style={{ color: "white" }}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#F1F5F9",
+    padding: 16,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#555",
-    fontSize: 16,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    backgroundColor: "#F5F7FA",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#333",
-    marginBottom: 16,
-  },
-  horizontalModalContent: {
-    flex: 1,
-  },
-  modalImageContainer: {
-    width: width,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalImage: {
-    width: width,
-    height: width,
-    resizeMode: "contain",
-  },
-  searchContainer: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
     marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
-  searchIcon: {
-    marginRight: 8,
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1E293B",
   },
   searchInput: {
-    flex: 1,
+    height: 48,
+    borderColor: "#E0E7EF",
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingLeft: 16,
+    marginBottom: 18,
+    backgroundColor: "#fff",
     fontSize: 16,
-    color: "#333",
+    color: "#1E293B",
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
+  loading: {
+    marginTop: 50,
   },
   noReports: {
-    marginTop: 16,
+    marginTop: 60,
     textAlign: "center",
     fontSize: 18,
-    color: "#666",
-    lineHeight: 24,
+    color: "#94A3B8",
+    fontWeight: "500",
   },
   listContainer: {
     paddingBottom: 24,
   },
   reportCard: {
-    margin: 16,
-    marginBottom: 16,
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#475569",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+    borderWidth: 0,
     overflow: "hidden",
   },
   image: {
     width: "100%",
-    height: 200,
+    height: 220,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginBottom: 8,
+    backgroundColor: "#E5E7EB",
   },
-  moreImagesIndicator: {
+  imageCountOverlay: {
     position: "absolute",
-    bottom: 12,
-    right: 12,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    right: 10,
+    bottom: 10,
+    backgroundColor: "rgba(30,41,59,0.7)",
     borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  moreImagesText: {
-    color: "#FFF",
+  imageCountText: {
+    color: "#fff",
+    fontWeight: "bold",
     marginLeft: 4,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reportContent: {
-    padding: 16,
+    fontSize: 15,
   },
   descripcion: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    lineHeight: 22,
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 10,
+    marginTop: 4,
   },
-  metaDataContainer: {
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  metaDataItem: {
+  infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  metaDataText: {
+  infoText: {
     fontSize: 14,
-    color: "#777",
-    marginLeft: 4,
+    color: "#64748B",
+    fontWeight: "500",
   },
   mapContainer: {
-    marginTop: 8,
-    borderRadius: 12,
-    overflow: "hidden",
+    marginTop: 10,
+    marginBottom: 10,
   },
   map: {
     width: "100%",
-    height: 150,
+    height: 120,
     borderRadius: 12,
+    marginBottom: 8,
   },
   mapButton: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    marginTop: 0,
   },
   mapButtonText: {
-    fontSize: 12,
-    color: "#3F51B5",
+    color: "#fff",
     fontWeight: "600",
+    fontSize: 15,
   },
-  noLocationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  locationText: {
-    fontSize: 14,
-    color: "#888",
-    marginLeft: 4,
-  },
-  actionsContainer: {
+  actionRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
+    alignItems: "center",
+    marginTop: 8,
+    gap: 8,
   },
-  actionButton: {
+  editButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 16,
-    padding: 6,
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginLeft: 0,
   },
-  actionText: {
-    fontSize: 14,
+  editButtonText: {
+    color: "#2563EB",
     fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 4,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginLeft: 0,
+  },
+  deleteButtonText: {
+    color: "#EF4444",
+    fontWeight: "600",
+    fontSize: 15,
     marginLeft: 4,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-  },
-  closeModalButton: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    zIndex: 10,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 8,
-    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(30, 41, 59, 0.85)",
   },
   verticalModalContent: {
-    flexGrow: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    paddingVertical: 5,
   },
   modalImageContainer: {
-    width: width,
-    height: "100%",
-    justifyContent: "center",
+    marginBottom: 2,
     alignItems: "center",
   },
   modalImage: {
-    width: width,
-    height: width,
+    width: 320,
+    height: 320,
+    borderRadius: 12,
     resizeMode: "contain",
+    backgroundColor: "#E5E7EB",
   },
-  imageCounter: {
+  closeButton: {
     position: "absolute",
-    bottom: 40,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    bottom: 30,
+    backgroundColor: "#2563EB",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignSelf: "center",
   },
-  imageCounterText: {
-    color: "#FFF",
-    fontSize: 14,
+  closeButtonText: {
+    color: "white",
+    fontSize: 17,
     fontWeight: "600",
   },
   editModalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(30,41,59,0.7)",
   },
   editModalContent: {
-    backgroundColor: "#FFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
     shadowRadius: 10,
-    elevation: 10,
-  },
-  editModalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+    elevation: 4,
   },
   editModalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#333",
+    fontSize: 19,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#1E293B",
   },
   editInput: {
-    backgroundColor: "#F5F7FA",
+    height: 90,
+    borderColor: "#d1d5db",
+    borderWidth: 1,
     borderRadius: 12,
-    padding: 16,
-    height: 120,
-    fontSize: 16,
-    color: "#333",
+    padding: 12,
     textAlignVertical: "top",
+    fontSize: 15,
+    color: "#1E293B",
+    backgroundColor: "#F3F8FF",
+    marginBottom: 16,
   },
   editButtons: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 20,
+    marginTop: 8,
   },
   cancelButton: {
-    backgroundColor: "#9E9E9E",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginRight: 12,
+    backgroundColor: "#64748B",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    marginRight: 10,
   },
   saveButton: {
-    backgroundColor: "#3F51B5",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "600",
-    fontSize: 16,
+    backgroundColor: "#2563EB",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
   },
 });

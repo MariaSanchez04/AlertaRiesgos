@@ -1,5 +1,3 @@
-// screens/PerfilScreen.js
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -173,7 +171,10 @@ const PerfilScreen = ({ navigation }) => {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <FontAwesome5 name="arrow-left" size={20} color="#334155" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mi Perfil</Text>
@@ -200,7 +201,10 @@ const PerfilScreen = ({ navigation }) => {
               <Text style={styles.photoOptionText}>Elegir de la galería</Text>
             </TouchableOpacity>
 
-            <TouchableHighlight style={styles.cancelButton} onPress={() => setPhotoModalVisible(false)}>
+            <TouchableHighlight
+              style={styles.cancelButton}
+              onPress={() => setPhotoModalVisible(false)}
+            >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableHighlight>
           </View>
@@ -215,7 +219,10 @@ const PerfilScreen = ({ navigation }) => {
               <ActivityIndicator size="large" color="#2563eb" />
             </View>
           ) : userInfo.photoURL ? (
-            <Image source={{ uri: userInfo.photoURL }} style={styles.profileImage} />
+            <Image
+              source={{ uri: userInfo.photoURL }}
+              style={styles.profileImage}
+            />
           ) : (
             <FontAwesome5 name="user-circle" size={100} color="#aaa" />
           )}
@@ -223,8 +230,13 @@ const PerfilScreen = ({ navigation }) => {
             <FontAwesome5 name="camera" size={16} color="#fff" />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setPhotoModalVisible(true)} disabled={uploadingPhoto}>
-          <Text style={styles.changePhotoText}>{uploadingPhoto ? "Subiendo..." : "Cambiar foto"}</Text>
+        <TouchableOpacity
+          onPress={() => setPhotoModalVisible(true)}
+          disabled={uploadingPhoto}
+        >
+          <Text style={styles.changePhotoText}>
+            {uploadingPhoto ? "Subiendo..." : "Cambiar foto"}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -259,7 +271,9 @@ const PerfilScreen = ({ navigation }) => {
 
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>Correo electrónico</Text>
-          <Text style={styles.infoValue}>{userInfo.email || "No disponible"}</Text>
+          <Text style={styles.infoValue}>
+            {userInfo.email || "No disponible"}
+          </Text>
         </View>
 
         {userInfo.role?.trim().toLowerCase() === "admin" && (
@@ -291,12 +305,22 @@ const PerfilScreen = ({ navigation }) => {
         style={styles.editProfileButton}
         onPress={() => navigation.navigate("ChangePassword")}
       >
-        <FontAwesome5 name="lock" size={16} color="#fff" style={styles.buttonIcon} />
+        <FontAwesome5
+          name="lock"
+          size={16}
+          color="#fff"
+          style={styles.buttonIcon}
+        />
         <Text style={styles.buttonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <FontAwesome5 name="sign-out-alt" size={16} color="#fff" style={styles.buttonIcon} />
+        <FontAwesome5
+          name="sign-out-alt"
+          size={16}
+          color="#fff"
+          style={styles.buttonIcon}
+        />
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -340,7 +364,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   photoOptionText: { fontSize: 16, color: "#333", marginLeft: 15 },
-  cancelButton: { marginTop: 15, backgroundColor: "#f3f4f6", padding: 10, borderRadius: 5 },
+  cancelButton: {
+    marginTop: 15,
+    backgroundColor: "#f3f4f6",
+    padding: 10,
+    borderRadius: 5,
+  },
   cancelButtonText: { color: "#333", fontWeight: "bold" },
   profileContainer: { alignItems: "center", marginVertical: 20 },
   profileImage: { width: 120, height: 120, borderRadius: 60 },
@@ -363,7 +392,12 @@ const styles = StyleSheet.create({
   changePhotoText: { color: "#2563eb", fontWeight: "bold", marginTop: 10 },
   infoContainer: { paddingHorizontal: 20, marginBottom: 20 },
   infoItem: { marginBottom: 20 },
-  infoLabel: { fontSize: 14, fontWeight: "600", color: "#64748b", marginBottom: 6 },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#64748b",
+    marginBottom: 6,
+  },
   infoValue: { fontSize: 18, color: "#334155" },
   input: {
     borderWidth: 1,

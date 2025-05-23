@@ -90,38 +90,54 @@ export default function RegisterScreen({ navigation }) {
       <View style={styles.gradientBackground}>
         <View style={styles.cityBuildings}>
           {/* Siluetas de edificios simplificadas */}
-          <View style={[styles.building, { height: 120, width: 60, left: '5%' }]} />
-          <View style={[styles.building, { height: 180, width: 70, left: '15%' }]} />
-          <View style={[styles.building, { height: 140, width: 80, left: '30%' }]} />
-          <View style={[styles.building, { height: 200, width: 65, left: '45%' }]} />
-          <View style={[styles.building, { height: 160, width: 70, left: '60%' }]} />
-          <View style={[styles.building, { height: 130, width: 50, left: '75%' }]} />
-          <View style={[styles.building, { height: 170, width: 60, left: '85%' }]} />
+          <View
+            style={[styles.building, { height: 120, width: 60, left: "5%" }]}
+          />
+          <View
+            style={[styles.building, { height: 180, width: 70, left: "15%" }]}
+          />
+          <View
+            style={[styles.building, { height: 140, width: 80, left: "30%" }]}
+          />
+          <View
+            style={[styles.building, { height: 200, width: 65, left: "45%" }]}
+          />
+          <View
+            style={[styles.building, { height: 160, width: 70, left: "60%" }]}
+          />
+          <View
+            style={[styles.building, { height: 130, width: 50, left: "75%" }]}
+          />
+          <View
+            style={[styles.building, { height: 170, width: 60, left: "85%" }]}
+          />
         </View>
       </View>
     );
   };
 
   // Elementos estrellas para el cielo nocturno
-  const starSky = Array(30).fill().map((_, i) => {
-    const size = Math.random() * 2 + 1;
-    const opacity = Math.random() * 0.7 + 0.3;
-    return (
-      <View
-        key={i}
-        style={{
-          position: 'absolute',
-          width: size,
-          height: size,
-          backgroundColor: '#FFFFFF',
-          borderRadius: size / 2,
-          top: `${Math.random() * 50}%`,
-          left: `${Math.random() * 100}%`,
-          opacity: opacity,
-        }}
-      />
-    );
-  });
+  const starSky = Array(30)
+    .fill()
+    .map((_, i) => {
+      const size = Math.random() * 2 + 1;
+      const opacity = Math.random() * 0.7 + 0.3;
+      return (
+        <View
+          key={i}
+          style={{
+            position: "absolute",
+            width: size,
+            height: size,
+            backgroundColor: "#FFFFFF",
+            borderRadius: size / 2,
+            top: `${Math.random() * 50}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: opacity,
+          }}
+        />
+      );
+    });
 
   return (
     <KeyboardAvoidingView
@@ -132,23 +148,28 @@ export default function RegisterScreen({ navigation }) {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <StatusBar barStyle="light-content" />
           <View style={styles.backgroundImage}>
-            <View style={styles.gradientBackground}>
-              {starSky}
-            </View>
+            <View style={styles.gradientBackground}>{starSky}</View>
             {cityGradientBackground()}
             <View style={styles.overlay} />
-            
+
             <View style={styles.headerContainer}>
               <MaterialIcons name="security" size={48} color="#ffffff" />
               <Text style={styles.appName}>Alerta riesgos</Text>
-              <Text style={styles.tagline}>Reportando por una ciudad más segura</Text>
+              <Text style={styles.tagline}>
+                Reportando por una ciudad más segura
+              </Text>
             </View>
 
             <View style={styles.formContainer}>
               <Text style={styles.title}>Crear Cuenta</Text>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="person-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Nombre"
                   value={fName}
@@ -159,7 +180,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="person-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Apellido"
                   value={lName}
@@ -170,7 +196,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="mail-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Correo electrónico"
                   value={email}
@@ -183,7 +214,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Contraseña"
                   value={password}
@@ -206,7 +242,12 @@ export default function RegisterScreen({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={22} color="#0370b7" style={styles.inputIcon} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={22}
+                  color="#0370b7"
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   placeholder="Confirmar contraseña"
                   value={confirmPassword}
@@ -221,7 +262,9 @@ export default function RegisterScreen({ navigation }) {
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   <Ionicons
-                    name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                    name={
+                      showConfirmPassword ? "eye-off-outline" : "eye-outline"
+                    }
                     size={24}
                     color="#0370b7"
                   />
@@ -256,11 +299,13 @@ export default function RegisterScreen({ navigation }) {
                 <View style={styles.dividerLine} />
               </View>
 
-              <TouchableOpacity 
-                style={styles.loginButton} 
+              <TouchableOpacity
+                style={styles.loginButton}
                 onPress={() => navigation.navigate("Login")}
               >
-                <Text style={styles.loginButtonText}>¿Ya tienes cuenta? Inicia sesión</Text>
+                <Text style={styles.loginButtonText}>
+                  ¿Ya tienes cuenta? Inicia sesión
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -315,17 +360,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
     marginTop: 10,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   tagline: {
     fontSize: 16,
     color: "#cce0ff",
     marginTop: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: {width: -1, height: 1},
-    textShadowRadius: 10
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   formContainer: {
     width: width * 0.88,
@@ -411,7 +456,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16, 
+    marginBottom: 16,
   },
   dividerLine: {
     flex: 1,

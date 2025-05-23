@@ -153,7 +153,15 @@ export default function AdminScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Panel de Administración</Text>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.headerBackButton}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <Text style={styles.headerBackIcon}>{"←"}</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Panel de Administración</Text>
+      </View>
       <Text style={styles.text}>Lista de usuarios registrados:</Text>
       <FlatList
         data={users}
@@ -174,27 +182,29 @@ export default function AdminScreen({ navigation }) {
               <Text style={styles.boldText}>Estado:</Text>{" "}
               {item.blocked ? "Bloqueado" : "Activo"}
             </Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => openEditModal(item)}
-            >
-              <Text style={styles.editButtonText}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() =>
-                Alert.alert(
-                  "Confirmar eliminación",
-                  `¿Estás seguro de que deseas eliminar a ${item.firstName} ${item.lastName}?`,
-                  [
-                    { text: "Cancelar", style: "cancel" },
-                    { text: "Eliminar", onPress: () => deleteUser(item.id) },
-                  ]
-                )
-              }
-            >
-              <Text style={styles.deleteButtonText}>Eliminar</Text>
-            </TouchableOpacity>
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => openEditModal(item)}
+              >
+                <Text style={styles.editButtonText}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() =>
+                  Alert.alert(
+                    "Confirmar eliminación",
+                    `¿Estás seguro de que deseas eliminar a ${item.firstName} ${item.lastName}?`,
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { text: "Eliminar", onPress: () => deleteUser(item.id) },
+                    ]
+                  )
+                }
+              >
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
@@ -202,55 +212,64 @@ export default function AdminScreen({ navigation }) {
       {/* Modal de edición */}
       <Modal
         visible={editModalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Editar Usuario</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre"
-              value={editFirstName}
-              onChangeText={setEditFirstName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Apellido"
-              value={editLastName}
-              onChangeText={setEditLastName}
-            />
-            <Text style={styles.label}>Rol</Text>
-            <Picker
-              selectedValue={editRole}
-              onValueChange={(itemValue) => setEditRole(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Ciudadano" value="ciudadano" />
-              <Picker.Item label="Admin" value="admin" />
-            </Picker>
-            <View style={styles.blockContainer}>
-              <Text style={styles.label}>Bloquear Usuario</Text>
+        <View style={styles.heroModalOverlay}>
+          <View style={styles.heroModalContent}>
+            <View style={styles.heroModalHeader}>
+              <Text style={styles.heroModalTitle}>Editar Usuario</Text>
+            </View>
+            <View style={styles.heroModalBody}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre"
+                value={editFirstName}
+                onChangeText={setEditFirstName}
+                placeholderTextColor="#94A3B8"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Apellido"
+                value={editLastName}
+                onChangeText={setEditLastName}
+                placeholderTextColor="#94A3B8"
+              />
+              <Text style={styles.label}>Rol</Text>
               <Picker
-                selectedValue={isBlocked ? "bloqueado" : "activo"}
-                onValueChange={(itemValue) =>
-                  setIsBlocked(itemValue === "bloqueado")
-                }
+                selectedValue={editRole}
+                onValueChange={(itemValue) => setEditRole(itemValue)}
                 style={styles.picker}
               >
-                <Picker.Item label="Activo" value="activo" />
-                <Picker.Item label="Bloqueado" value="bloqueado" />
+                <Picker.Item label="Ciudadano" value="ciudadano" />
+                <Picker.Item label="Admin" value="admin" />
               </Picker>
+              <View style={styles.blockContainer}>
+                <Text style={styles.label}>Bloquear Usuario</Text>
+                <Picker
+                  selectedValue={isBlocked ? "bloqueado" : "activo"}
+                  onValueChange={(itemValue) =>
+                    setIsBlocked(itemValue === "bloqueado")
+                  }
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Activo" value="activo" />
+                  <Picker.Item label="Bloqueado" value="bloqueado" />
+                </Picker>
+              </View>
             </View>
-            <View style={styles.modalButtons}>
+            <View style={styles.heroModalFooter}>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.heroModalButton, styles.heroModalButtonDanger]}
                 onPress={closeEditModal}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={styles.heroModalButtonDangerText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
-                <Text style={styles.saveButtonText}>Guardar</Text>
+              <TouchableOpacity
+                style={[styles.heroModalButton, styles.heroModalButtonPrimary]}
+                onPress={saveChanges}
+              >
+                <Text style={styles.heroModalButtonPrimaryText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -263,124 +282,192 @@ export default function AdminScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f7f7f7",
+    padding: 16,
+    backgroundColor: "#F1F5F9",
   },
-  title: {
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
+  },
+  headerBackIcon: {
     fontSize: 28,
+    color: "#1E293B",
+    fontWeight: "bold",
+  },
+  headerTitle: {
+    fontSize: 22,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+    color: "#1E293B",
   },
   text: {
-    fontSize: 18,
-    color: "#666",
-    marginBottom: 10,
+    fontSize: 16,
+    color: "#64748B",
+    marginBottom: 14,
     textAlign: "center",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    fontWeight: "500",
   },
   userItem: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#475569",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
     elevation: 2,
+    borderWidth: 0,
+    overflow: "hidden",
   },
   userText: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: 15,
+    color: "#1E293B",
+    marginBottom: 2,
   },
   boldText: {
     fontWeight: "bold",
+    color: "#2563EB",
+  },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: 10,
+    gap: 10,
   },
   editButton: {
-    marginTop: 10,
-    backgroundColor: "#4caf50",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginLeft: 0,
+    borderWidth: 1,
+    borderColor: "#3B82F6",
   },
   editButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
+    color: "#2563EB",
+    fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 2,
   },
   deleteButton: {
-    marginTop: 10,
-    backgroundColor: "#e63946",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginLeft: 0,
+    borderWidth: 1,
+    borderColor: "#EF4444",
   },
   deleteButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
+    color: "#EF4444",
+    fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 2,
   },
-  modalContainer: {
+  // Modal estilo HeroUI
+  heroModalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(15,23,42,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  modalContent: {
+  heroModalContent: {
     width: "90%",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 18,
+    overflow: "hidden",
+    paddingBottom: 0,
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  modalTitle: {
-    fontSize: 20,
+  heroModalHeader: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#F1F5F9",
+  },
+  heroModalTitle: {
+    fontSize: 19,
     fontWeight: "bold",
-    marginBottom: 15,
+    color: "#1E293B",
+  },
+  heroModalBody: {
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  heroModalFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    padding: 16,
+    backgroundColor: "#F9FAFB",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    gap: 10,
+  },
+  heroModalButton: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroModalButtonDanger: {
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#EF4444",
+  },
+  heroModalButtonDangerText: {
+    color: "#EF4444",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  heroModalButtonPrimary: {
+    backgroundColor: "#2563EB",
+  },
+  heroModalButtonPrimaryText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
   input: {
     height: 40,
-    borderColor: "#ccc",
+    borderColor: "#E2E8F0",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
+    color: "#1E293B",
+    backgroundColor: "#F8FAFC",
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
     marginBottom: 5,
+    color: "#334155",
   },
   picker: {
     height: 50,
-    borderColor: "#ccc",
+    borderColor: "#E2E8F0",
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 15,
+    color: "#1E293B",
+    backgroundColor: "#F8FAFC",
   },
   blockContainer: {
     marginBottom: 15,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  cancelButton: {
-    backgroundColor: "#888",
-    padding: 10,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  cancelButtonText: {
-    color: "#fff",
-  },
-  saveButton: {
-    backgroundColor: "#4caf50",
-    padding: 10,
-    borderRadius: 8,
-  },
-  saveButtonText: {
-    color: "#fff",
   },
 });

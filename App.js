@@ -30,7 +30,7 @@ export default function App() {
         <Stack.Screen
           name="ForgotPassword"
           component={ForgotPasswordScreen}
-          options={{ title: "Recuperar contraseña" }}
+          options={{ title: "Recuperar contraseña" , headerShown: false }}
         />
 
         {/* Cambiar contraseña para usuarios autenticados */}
@@ -58,21 +58,21 @@ export default function App() {
         <Stack.Screen
           name="Takephoto"
           component={TakePhotoAndUpload}
-          options={{ title: "Tomar foto" }}
+          options={{ title: "Tomar reporte" , headerShown: false }}
         />
 
         {/* Lista de reportes */}
         <Stack.Screen
           name="Reportes"
           component={ReportListScreen}
-          options={{ title: "Lista de reportes" }}
+          options={{ title: "Lista de reportes" , headerShown: false }}
         />
 
         {/* Detalle de reporte */}
         <Stack.Screen
           name="ReporteDetalle"
           component={ReporteDetalle}
-          options={{ title: "Detalle del reporte" }}
+          options={{ title: "Detalle del reporte" , headerShown: false }}
         />
 
         {/* Panel de administrador */}

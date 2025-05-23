@@ -23,7 +23,11 @@ import { db } from "../src/config/firebaseConfig";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import {
   configurarNotificaciones,
   mostrarNotificacion,
@@ -98,7 +102,7 @@ export default function ReportScreen() {
   const subirReporte = async () => {
     if (imagenes.length === 0 || !ubicacion || !descripcion) {
       Alert.alert(
-        "Campos incompletos", 
+        "Campos incompletos",
         "Por favor completa todos los campos para enviar tu reporte."
       );
       return;
@@ -164,7 +168,7 @@ export default function ReportScreen() {
         "Tu reporte de seguridad ha sido enviado exitosamente. Gracias por tu colaboración.",
         [
           {
-            text: "Ver mis reportes",
+            text: "Ver reportes",
             onPress: () => navigation.navigate("Reportes"),
           },
         ],
@@ -185,29 +189,53 @@ export default function ReportScreen() {
   const renderStepIndicator = () => {
     return (
       <View style={styles.stepIndicator}>
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <View style={[styles.stepCircle, step >= 1 && styles.activeStepCircle]}>
-            <Text style={[styles.stepNumber, step >= 1 && styles.activeStepNumber]}>1</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            style={[styles.stepCircle, step >= 1 && styles.activeStepCircle]}
+          >
+            <Text
+              style={[styles.stepNumber, step >= 1 && styles.activeStepNumber]}
+            >
+              1
+            </Text>
           </View>
-          <Text style={[styles.stepText, step === 1 && styles.activeStepText]}>Descripción</Text>
+          <Text style={[styles.stepText, step === 1 && styles.activeStepText]}>
+            Descripción
+          </Text>
         </View>
-        
+
         <View style={styles.stepLine} />
-        
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <View style={[styles.stepCircle, step >= 2 && styles.activeStepCircle]}>
-            <Text style={[styles.stepNumber, step >= 2 && styles.activeStepNumber]}>2</Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            style={[styles.stepCircle, step >= 2 && styles.activeStepCircle]}
+          >
+            <Text
+              style={[styles.stepNumber, step >= 2 && styles.activeStepNumber]}
+            >
+              2
+            </Text>
           </View>
-          <Text style={[styles.stepText, step === 2 && styles.activeStepText]}>Fotos</Text>
+          <Text style={[styles.stepText, step === 2 && styles.activeStepText]}>
+            Fotos
+          </Text>
         </View>
-        
+
         <View style={styles.stepLine} />
-        
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <View style={[styles.stepCircle, step >= 3 && styles.activeStepCircle]}>
-            <Text style={[styles.stepNumber, step >= 3 && styles.activeStepNumber]}>3</Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            style={[styles.stepCircle, step >= 3 && styles.activeStepCircle]}
+          >
+            <Text
+              style={[styles.stepNumber, step >= 3 && styles.activeStepNumber]}
+            >
+              3
+            </Text>
           </View>
-          <Text style={[styles.stepText, step === 3 && styles.activeStepText]}>Ubicación</Text>
+          <Text style={[styles.stepText, step === 3 && styles.activeStepText]}>
+            Ubicación
+          </Text>
         </View>
       </View>
     );
@@ -217,7 +245,9 @@ export default function ReportScreen() {
     return (
       <View style={styles.stepContainer}>
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>¿Qué situación de seguridad quieres reportar?</Text>
+          <Text style={styles.inputLabel}>
+            ¿Qué situación de seguridad quieres reportar?
+          </Text>
           <TextInput
             value={descripcion}
             onChangeText={setDescripcion}
@@ -228,11 +258,11 @@ export default function ReportScreen() {
             placeholderTextColor="#A0A0A0"
           />
         </View>
-        
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.nextButton, !descripcion && styles.disabledButton]}
-            onPress={() => descripcion ? setStep(2) : null}
+            onPress={() => (descripcion ? setStep(2) : null)}
             disabled={!descripcion}
           >
             <Text style={styles.nextButtonText}>Continuar</Text>
@@ -247,7 +277,7 @@ export default function ReportScreen() {
     return (
       <View style={styles.stepContainer}>
         <Text style={styles.mediaTitle}>Añade evidencia fotográfica</Text>
-        
+
         <View style={styles.mediaButtons}>
           <TouchableOpacity
             style={styles.mediaButton}
@@ -257,7 +287,7 @@ export default function ReportScreen() {
             <Ionicons name="camera" size={28} color="#FFF" />
             <Text style={styles.mediaButtonText}>Tomar foto</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.mediaButton}
             onPress={seleccionarImagenes}
@@ -270,7 +300,9 @@ export default function ReportScreen() {
 
         {imagenes.length > 0 ? (
           <View style={styles.imagesContainer}>
-            <Text style={styles.imagesCount}>{imagenes.length} imagen(es) seleccionada(s)</Text>
+            <Text style={styles.imagesCount}>
+              {imagenes.length} imagen(es) seleccionada(s)
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -299,23 +331,32 @@ export default function ReportScreen() {
           </View>
         ) : (
           <View style={styles.noImagesContainer}>
-            <MaterialCommunityIcons name="file-image-outline" size={60} color="#CCCCCC" />
-            <Text style={styles.noImagesText}>No has seleccionado imágenes</Text>
+            <MaterialCommunityIcons
+              name="file-image-outline"
+              size={60}
+              color="#CCCCCC"
+            />
+            <Text style={styles.noImagesText}>
+              No has seleccionado imágenes
+            </Text>
           </View>
         )}
-        
+
         <View style={styles.navigationButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => setStep(1)}
           >
             <Ionicons name="arrow-back" size={20} color="#3F51B5" />
             <Text style={styles.backButtonText}>Atrás</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[styles.nextButton, imagenes.length === 0 && styles.disabledButton]}
-            onPress={() => imagenes.length > 0 ? setStep(3) : null}
+            style={[
+              styles.nextButton,
+              imagenes.length === 0 && styles.disabledButton,
+            ]}
+            onPress={() => (imagenes.length > 0 ? setStep(3) : null)}
             disabled={imagenes.length === 0}
           >
             <Text style={styles.nextButtonText}>Continuar</Text>
@@ -329,13 +370,15 @@ export default function ReportScreen() {
   const renderStep3 = () => {
     return (
       <View style={styles.stepContainer}>
-        <Text style={styles.locationTitle}>Confirma la ubicación del incidente</Text>
-        
+        <Text style={styles.locationTitle}>
+          Confirma la ubicación del incidente
+        </Text>
+
         {ubicacionError ? (
           <View style={styles.errorContainer}>
             <Ionicons name="warning" size={24} color="#F44336" />
             <Text style={styles.errorText}>{ubicacionError}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.retryButton}
               onPress={obtenerUbicacion}
             >
@@ -364,34 +407,45 @@ export default function ReportScreen() {
             <View style={styles.mapOverlay}>
               <View style={styles.mapInfo}>
                 <Ionicons name="location" size={18} color="#3F51B5" />
-                <Text style={styles.locationInfo}>Ubicación actual detectada</Text>
+                <Text style={styles.locationInfo}>
+                  Ubicación actual detectada
+                </Text>
               </View>
             </View>
           </View>
         ) : (
           <View style={styles.loadingLocation}>
             <ActivityIndicator size="large" color="#3F51B5" />
-            <Text style={styles.loadingLocationText}>Obteniendo ubicación...</Text>
+            <Text style={styles.loadingLocationText}>
+              Obteniendo ubicación...
+            </Text>
           </View>
         )}
-        
+
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryTitle}>Resumen del reporte</Text>
-          
+
           <View style={styles.summaryItem}>
             <Ionicons name="document-text-outline" size={20} color="#555" />
             <Text style={styles.summaryLabel}>Descripción:</Text>
-            <Text style={styles.summaryValue} numberOfLines={1} ellipsizeMode="tail">
-              {descripcion.substring(0, 40)}{descripcion.length > 40 ? "..." : ""}
+            <Text
+              style={styles.summaryValue}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {descripcion.substring(0, 40)}
+              {descripcion.length > 40 ? "..." : ""}
             </Text>
           </View>
-          
+
           <View style={styles.summaryItem}>
             <Ionicons name="images-outline" size={20} color="#555" />
             <Text style={styles.summaryLabel}>Imágenes:</Text>
-            <Text style={styles.summaryValue}>{imagenes.length} seleccionada(s)</Text>
+            <Text style={styles.summaryValue}>
+              {imagenes.length} seleccionada(s)
+            </Text>
           </View>
-          
+
           <View style={styles.summaryItem}>
             <Ionicons name="location-outline" size={20} color="#555" />
             <Text style={styles.summaryLabel}>Ubicación:</Text>
@@ -400,22 +454,29 @@ export default function ReportScreen() {
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.navigationButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => setStep(2)}
           >
             <Ionicons name="arrow-back" size={20} color="#3F51B5" />
             <Text style={styles.backButtonText}>Atrás</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[styles.submitButton, 
-              (!descripcion || !ubicacion || imagenes.length === 0 || cargando) && styles.disabledButton
+            style={[
+              styles.submitButton,
+              (!descripcion ||
+                !ubicacion ||
+                imagenes.length === 0 ||
+                cargando) &&
+                styles.disabledButton,
             ]}
             onPress={subirReporte}
-            disabled={!descripcion || !ubicacion || imagenes.length === 0 || cargando}
+            disabled={
+              !descripcion || !ubicacion || imagenes.length === 0 || cargando
+            }
           >
             {cargando ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
@@ -446,19 +507,29 @@ export default function ReportScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#3F51B5" barStyle="light-content" />
-      
+      <StatusBar barStyle="light-content" />
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Nuevo Reporte</Text>
-          <Text style={styles.headerSubtitle}>Ayuda a mejorar la seguridad de tu comunidad</Text>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              style={styles.headerBackButton}
+              onPress={() => navigation.navigate("Home")}
+            >
+              <Ionicons name="arrow-back" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Nuevo Reporte</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>
+            Ayuda a mejorar la seguridad de tu comunidad
+          </Text>
         </View>
-        
+
         {renderStepIndicator()}
-        
+
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -475,13 +546,13 @@ export default function ReportScreen() {
           onRequestClose={() => setImagenSeleccionada(null)}
         >
           <View style={styles.modalContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.closeModalButton}
               onPress={() => setImagenSeleccionada(null)}
             >
               <Ionicons name="close" size={28} color="#FFF" />
             </TouchableOpacity>
-            
+
             <Image
               source={{ uri: imagenSeleccionada }}
               style={styles.modalImage}
@@ -497,16 +568,17 @@ export default function ReportScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#F1F5F9",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#F1F5F9",
   },
   header: {
-    backgroundColor: "#3F51B5",
-    paddingVertical: 16,
+    backgroundColor: "#0F172A",
     paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     shadowColor: "#000",
@@ -514,16 +586,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
+    // alignItems: "center", // Elimina esto para usar headerRow
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
     color: "#FFFFFF",
+    textAlign: "left",
+    flex: 1,
   },
   headerSubtitle: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
     marginTop: 4,
+    textAlign: "left",
   },
   stepIndicator: {
     flexDirection: "row",
@@ -537,17 +622,17 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
   },
   activeStepCircle: {
-    backgroundColor: "#3F51B5",
+    backgroundColor: "#3B82F6",
   },
   stepNumber: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#555",
+    color: "#334155",
   },
   activeStepNumber: {
     color: "#FFFFFF",
@@ -555,16 +640,16 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#888",
+    color: "#64748B",
     marginLeft: 4,
   },
   activeStepText: {
-    color: "#3F51B5",
+    color: "#3B82F6",
   },
   stepLine: {
     flex: 1,
     height: 2,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#E2E8F0",
     marginHorizontal: 8,
   },
   scrollContainer: {
@@ -581,17 +666,17 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#1E293B",
     marginBottom: 12,
   },
   textArea: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "#E2E8F0",
     padding: 16,
     fontSize: 16,
-    color: "#333",
+    color: "#1E293B",
     minHeight: 120,
     textAlignVertical: "top",
   },
@@ -600,14 +685,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   nextButton: {
-    backgroundColor: "#3F51B5",
+    backgroundColor: "#3B82F6",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
-    shadowColor: "#000",
+    shadowColor: "#2563EB",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -620,14 +705,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   disabledButton: {
-    backgroundColor: "#CCCCCC",
+    backgroundColor: "#CBD5E1",
     shadowOpacity: 0,
     elevation: 0,
   },
   mediaTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    color: "#1E293B",
     marginBottom: 16,
   },
   mediaButtons: {
@@ -636,14 +721,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   mediaButton: {
-    backgroundColor: "#3F51B5",
+    backgroundColor: "#2563EB",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     width: width * 0.4,
     height: 100,
     borderRadius: 12,
-    shadowColor: "#000",
+    shadowColor: "#2563EB",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -660,7 +745,7 @@ const styles = StyleSheet.create({
   },
   imagesCount: {
     fontSize: 14,
-    color: "#555",
+    color: "#334155",
     marginBottom: 12,
   },
   imagesScroll: {
@@ -679,7 +764,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: "#F44336",
+    backgroundColor: "#EF4444",
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -687,7 +772,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   noImagesContainer: {
-    backgroundColor: "#F8F8F8",
+    backgroundColor: "#F1F5F9",
     borderRadius: 12,
     padding: 24,
     alignItems: "center",
@@ -696,7 +781,7 @@ const styles = StyleSheet.create({
   },
   noImagesText: {
     fontSize: 16,
-    color: "#888",
+    color: "#64748B",
     marginTop: 12,
   },
   navigationButtons: {
@@ -712,10 +797,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#3F51B5",
+    borderColor: "#3B82F6",
+    backgroundColor: "#F1F5F9",
   },
   backButtonText: {
-    color: "#3F51B5",
+    color: "#3B82F6",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
@@ -723,7 +809,7 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    color: "#1E293B",
     marginBottom: 16,
   },
   errorContainer: {
@@ -736,12 +822,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: "#F44336",
+    color: "#E53935",
     marginTop: 8,
     textAlign: "center",
   },
   retryButton: {
-    backgroundColor: "#F44336",
+    backgroundColor: "#E53935",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -776,20 +862,20 @@ const styles = StyleSheet.create({
   },
   locationInfo: {
     fontSize: 14,
-    color: "#555",
+    color: "#334155",
     marginLeft: 6,
   },
   loadingLocation: {
     height: 200,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F8F8F8",
+    backgroundColor: "#F1F5F9",
     borderRadius: 12,
     marginBottom: 24,
   },
   loadingLocationText: {
     fontSize: 16,
-    color: "#666",
+    color: "#64748B",
     marginTop: 12,
   },
   summaryContainer: {
@@ -797,7 +883,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
-    shadowColor: "#000",
+    shadowColor: "#2563EB",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -806,7 +892,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#333",
+    color: "#1E293B",
     marginBottom: 12,
   },
   summaryItem: {
@@ -816,25 +902,25 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#555",
+    color: "#334155",
     fontWeight: "600",
     marginLeft: 8,
     marginRight: 4,
   },
   summaryValue: {
     fontSize: 14,
-    color: "#333",
+    color: "#1E293B",
     flex: 1,
   },
   submitButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#10B981",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
-    shadowColor: "#000",
+    shadowColor: "#2563EB",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

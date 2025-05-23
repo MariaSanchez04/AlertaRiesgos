@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
   Linking,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
@@ -24,17 +23,9 @@ export default function ReporteDetalle() {
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(true);
 
-  const [mapModalVisible, setMapModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-
-  const openMapModal = (lat, lng) => {
-    setSelectedLocation({ lat, lng });
-    setMapModalVisible(true);
-  };
-
   const abrirEnGoogleMaps = () => {
-    if (selectedLocation) {
-      const url = `https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}`;
+    if (reporte?.latitud && reporte?.longitud) {
+      const url = `https://www.google.com/maps?q=${reporte.latitud},${reporte.longitud}`;
       Linking.openURL(url).catch((err) =>
         console.error("No se pudo abrir Google Maps:", err)
       );
@@ -121,11 +112,9 @@ export default function ReporteDetalle() {
             </MapView>
             <TouchableOpacity
               style={styles.mapButton}
-              onPress={() =>
-                openMapModal(reporte.latitud, reporte.longitud)
-              }
+              onPress={abrirEnGoogleMaps}
             >
-              <Text style={styles.mapButtonText}>Ver en mapa completo</Text>
+              <Text style={styles.mapButtonText}>Ver en google maps</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -140,58 +129,6 @@ export default function ReporteDetalle() {
             : "Fecha no disponible"}
         </Text>
       </ScrollView>
-
-      <Modal visible={mapModalVisible} transparent={false} animationType="slide">
-        <View style={{ flex: 1 }}>
-          <MapView
-            style={{ flex: 1 }}
-            initialRegion={{
-              latitude: selectedLocation?.lat || 0,
-              longitude: selectedLocation?.lng || 0,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-          >
-            {selectedLocation && (
-              <Marker
-                coordinate={{
-                  latitude: selectedLocation.lat,
-                  longitude: selectedLocation.lng,
-                }}
-              />
-            )}
-          </MapView>
-
-          <View style={{ padding: 16 }}>
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#3F51B5",
-                padding: 12,
-                borderRadius: 8,
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-              onPress={abrirEnGoogleMaps}
-            >
-              <Text style={{ color: "#fff", fontWeight: "600" }}>
-                Abrir en Google Maps
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setMapModalVisible(false)}
-              style={{
-                backgroundColor: "#E0E0E0",
-                padding: 12,
-                borderRadius: 8,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#333", fontWeight: "600" }}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }
@@ -199,81 +136,60 @@ export default function ReporteDetalle() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
+    backgroundColor: "#F1F5F9",
     padding: 16,
-    backgroundColor: "#F5F7FA",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#555",
-    fontSize: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "red",
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#475569",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   titulo: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#333",
+    color: "#1E293B",
     marginBottom: 16,
     textAlign: "center",
   },
   imagen: {
     width: "100%",
-    height: 250,
+    height: 220,
     borderRadius: 12,
     marginBottom: 16,
   },
   descripcion: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
-    lineHeight: 22,
+    color: "#1E293B",
     marginBottom: 16,
-  },
-  mapContainer: {
-    marginTop: 16,
-    borderRadius: 12,
-    overflow: "hidden",
   },
   mapa: {
     width: "100%",
-    height: 200,
+    height: 180,
     borderRadius: 12,
+    marginBottom: 16,
   },
   mapButton: {
-    backgroundColor: "#3F51B5",
-    marginTop: 10,
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: "center",
+    marginTop: 10,
   },
   mapButtonText: {
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
   },
-  ubicacion: {
-    fontSize: 14,
-    color: "#888",
-    marginTop: 16,
-    textAlign: "center",
-  },
   fecha: {
     fontSize: 14,
-    color: "#777",
+    color: "#94A3B8",
     marginTop: 16,
     textAlign: "center",
   },

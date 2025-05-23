@@ -33,7 +33,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useRef } from "react"; // Ya puede estar importado por default
 
-
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
     firstName: "",
@@ -81,22 +80,24 @@ const HomeScreen = ({ navigation }) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
-    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setUserInfo({
-          firstName: data.firstName || "",
-          lastName: data.lastName || "",
-          email: data.email || "",
-          photoURL: data.photoURL || "",
-          role: data.role || "",
-        });
+    const unsubscribe = onSnapshot(
+      doc(db, "users", currentUser.uid),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setUserInfo({
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            email: data.email || "",
+            photoURL: data.photoURL || "",
+            role: data.role || "",
+          });
+        }
       }
-    });
+    );
 
     return () => unsubscribe(); // Limpieza al desmontar
   }, []);
-
 
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "Fecha no disponible";
@@ -104,10 +105,10 @@ const HomeScreen = ({ navigation }) => {
     const date = timestamp.seconds
       ? new Date(timestamp.seconds * 1000)
       : timestamp.toDate && typeof timestamp.toDate === "function"
-        ? timestamp.toDate()
-        : timestamp instanceof Date
-          ? timestamp
-          : null;
+      ? timestamp.toDate()
+      : timestamp instanceof Date
+      ? timestamp
+      : null;
 
     if (!date) return "Fecha no disponible";
 
@@ -176,7 +177,9 @@ const HomeScreen = ({ navigation }) => {
           setNotificaciones((prevNotificaciones) =>
             prevNotificaciones.filter((n) => n.id !== notificacion.id)
           );
-          setCantidadNotificaciones((prevCantidad) => Math.max(0, prevCantidad - 1));
+          setCantidadNotificaciones((prevCantidad) =>
+            Math.max(0, prevCantidad - 1)
+          );
         }, 30000);
       });
     });
@@ -189,7 +192,9 @@ const HomeScreen = ({ navigation }) => {
       (notif) => notif.id !== reportId
     );
     setNotificaciones(updatedNotifications);
-    setCantidadNotificaciones(updatedNotifications.filter((n) => !n.leido).length);
+    setCantidadNotificaciones(
+      updatedNotifications.filter((n) => !n.leido).length
+    );
 
     // Actualizar la lista de todas las notificaciones
     const updatedAll = allNotificaciones.map((notif) =>
@@ -262,8 +267,18 @@ const HomeScreen = ({ navigation }) => {
 
   // Nombres de los meses en español
   const nombresMeses = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
   ];
 
   // Array de años para seleccionar (año actual y 2 años anteriores)
@@ -271,7 +286,6 @@ const HomeScreen = ({ navigation }) => {
     new Date().getFullYear(),
     new Date().getFullYear() - 1,
     new Date().getFullYear() - 2,
-
   ];
 
   // Componente para seleccionar mes y año
@@ -284,14 +298,14 @@ const HomeScreen = ({ navigation }) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.mesesScrollView}
-           ref={scrollRefMeses}
+          ref={scrollRefMeses}
         >
           {nombresMeses.map((mes, index) => (
             <TouchableOpacity
               key={`mes-${index}`}
               style={[
                 styles.filtroItem,
-                filtroMes === index && styles.filtroItemSelected
+                filtroMes === index && styles.filtroItemSelected,
               ]}
               onPress={() => {
                 setFiltroMes(index);
@@ -301,7 +315,7 @@ const HomeScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.filtroItemText,
-                  filtroMes === index && styles.filtroItemTextSelected
+                  filtroMes === index && styles.filtroItemTextSelected,
                 ]}
               >
                 {mes}
@@ -316,7 +330,7 @@ const HomeScreen = ({ navigation }) => {
               key={`anio-${anio}`}
               style={[
                 styles.filtroItem,
-                filtroAnio === anio && styles.filtroItemSelected
+                filtroAnio === anio && styles.filtroItemSelected,
               ]}
               onPress={() => {
                 setFiltroAnio(anio);
@@ -326,7 +340,7 @@ const HomeScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.filtroItemText,
-                  filtroAnio === anio && styles.filtroItemTextSelected
+                  filtroAnio === anio && styles.filtroItemTextSelected,
                 ]}
               >
                 {anio}
@@ -383,7 +397,12 @@ const HomeScreen = ({ navigation }) => {
       ]}
     >
       <View style={styles.notificationIconContainer}>
-        <View style={[styles.notificationIcon, { backgroundColor: getTipoColor(item.tipo) }]}>
+        <View
+          style={[
+            styles.notificationIcon,
+            { backgroundColor: getTipoColor(item.tipo) },
+          ]}
+        >
           <FontAwesome5 name={getTipoIcon(item.tipo)} size={16} color="#fff" />
         </View>
       </View>
@@ -399,7 +418,8 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.notificationBody}>{item.body}</Text>
         <View style={styles.notificationFooter}>
           <Text style={styles.notificationLocation}>
-            <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" /> {item.ubicacion}
+            <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" />{" "}
+            {item.ubicacion}
           </Text>
           <Text style={styles.notificationTime}>{item.time}</Text>
         </View>
@@ -411,13 +431,12 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      <LinearGradient
-        colors={['#0F172A', '#1E293B']}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0F172A", "#1E293B"]} style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={[styles.greeting, { marginTop: 10 }]}>Hola, {userInfo.firstName}</Text>
+            <Text style={[styles.greeting, { marginTop: 10 }]}>
+              Hola, {userInfo.firstName}
+            </Text>
             <Text style={styles.subtitle}>Manteniendo seguro tu barrio</Text>
           </View>
 
@@ -444,7 +463,10 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => navigation.navigate("Perfil")}
             >
               {userInfo.photoURL ? (
-                <Image source={{ uri: userInfo.photoURL }} style={styles.profileImage} />
+                <Image
+                  source={{ uri: userInfo.photoURL }}
+                  style={styles.profileImage}
+                />
               ) : (
                 <View style={styles.profilePlaceholder}>
                   <Text style={styles.profileInitial}>
@@ -513,9 +535,14 @@ const HomeScreen = ({ navigation }) => {
               />
             ) : (
               <>
-                {(viewingAllNotifications ? allNotificaciones : notificaciones).length > 0 ? (
+                {(viewingAllNotifications ? allNotificaciones : notificaciones)
+                  .length > 0 ? (
                   <FlatList
-                    data={viewingAllNotifications ? allNotificaciones : notificaciones}
+                    data={
+                      viewingAllNotifications
+                        ? allNotificaciones
+                        : notificaciones
+                    }
                     renderItem={renderNotificationItem}
                     keyExtractor={(item) => item.id}
                     style={styles.notificationList}
@@ -562,16 +589,23 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.content}>
         <Animated.View style={[styles.welcomeCard, { opacity: fadeAnim }]}>
           <LinearGradient
-            colors={['#3B82F6', '#2563EB']}
+            colors={["#3B82F6", "#2563EB"]}
             style={styles.welcomeGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             <View style={styles.welcomeContent}>
-              <FontAwesome5 name="shield-alt" size={28} color="#FFFFFF" style={styles.welcomeIcon} />
+              <FontAwesome5
+                name="shield-alt"
+                size={28}
+                color="#FFFFFF"
+                style={styles.welcomeIcon}
+              />
               <View>
                 <Text style={styles.welcomeText}>Seguridad Ciudadana</Text>
-                <Text style={styles.welcomeSubtext}>Reporta incidentes en tu zona</Text>
+                <Text style={styles.welcomeSubtext}>
+                  Reporta incidentes en tu zona
+                </Text>
               </View>
             </View>
           </LinearGradient>
@@ -585,7 +619,9 @@ const HomeScreen = ({ navigation }) => {
               style={styles.actionCard}
               onPress={() => navigation.navigate("Takephoto")}
             >
-              <View style={[styles.actionIconBg, { backgroundColor: '#EF4444' }]}>
+              <View
+                style={[styles.actionIconBg, { backgroundColor: "#EF4444" }]}
+              >
                 <FontAwesome5 name="camera" size={22} color="#fff" />
               </View>
               <Text style={styles.actionCardText}>Nuevo Reporte</Text>
@@ -595,10 +631,12 @@ const HomeScreen = ({ navigation }) => {
               style={styles.actionCard}
               onPress={() => navigation.navigate("Reportes")}
             >
-              <View style={[styles.actionIconBg, { backgroundColor: '#10B981' }]}>
+              <View
+                style={[styles.actionIconBg, { backgroundColor: "#10B981" }]}
+              >
                 <FontAwesome5 name="clipboard-list" size={22} color="#fff" />
               </View>
-              <Text style={styles.actionCardText}>Mis Reportes</Text>
+              <Text style={styles.actionCardText}>Reportes</Text>
             </TouchableOpacity>
 
             {userInfo.role === "admin" && (
@@ -606,7 +644,9 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.actionCard}
                 onPress={() => navigation.navigate("AdminScreen")}
               >
-                <View style={[styles.actionIconBg, { backgroundColor: '#8B5CF6' }]}>
+                <View
+                  style={[styles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
+                >
                   <FontAwesome5 name="user-shield" size={22} color="#fff" />
                 </View>
                 <Text style={styles.actionCardText}>Panel Admin</Text>
@@ -628,23 +668,39 @@ const HomeScreen = ({ navigation }) => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.recentReportCard}
-                  onPress={() => navigation.navigate("ReporteDetalle", { reportId: item.id })}
+                  onPress={() =>
+                    navigation.navigate("ReporteDetalle", { reportId: item.id })
+                  }
                 >
-                  <View style={[styles.reportTypeTag, { backgroundColor: getTipoColor(item.tipo || "General") }]}>
-                    <FontAwesome5 name={getTipoIcon(item.tipo || "General")} size={12} color="#fff" />
-                    <Text style={styles.reportTypeText}>{item.tipo || "General"}</Text>
+                  <View
+                    style={[
+                      styles.reportTypeTag,
+                      { backgroundColor: getTipoColor(item.tipo || "General") },
+                    ]}
+                  >
+                    <FontAwesome5
+                      name={getTipoIcon(item.tipo || "General")}
+                      size={12}
+                      color="#fff"
+                    />
+                    <Text style={styles.reportTypeText}>
+                      {item.tipo || "General"}
+                    </Text>
                   </View>
 
                   <Text style={styles.recentReportTitle} numberOfLines={2}>
-                    {item.descripcion ? item.descripcion.substring(0, 60) : "Sin descripción"}
-                    {item.descripcion && item.descripcion.length > 60 ? "..." : ""}
+                    {item.descripcion
+                      ? item.descripcion.substring(0, 60)
+                      : "Sin descripción"}
+                    {item.descripcion && item.descripcion.length > 60
+                      ? "..."
+                      : ""}
                   </Text>
 
                   <View style={styles.recentReportFooter}>
-                    <Text style={styles.recentReportLocation}>
-                      <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" /> {item.ubicacion || "No especificada"}
+                    <Text style={styles.recentReportTime}>
+                      {formatTimestamp(item.creadoEn)}
                     </Text>
-                    <Text style={styles.recentReportTime}>{formatTimestamp(item.creadoEn)}</Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -652,7 +708,9 @@ const HomeScreen = ({ navigation }) => {
           ) : (
             <View style={styles.emptyReportsContainer}>
               <FontAwesome5 name="clipboard" size={40} color="#CBD5E1" />
-              <Text style={styles.emptyReportsText}>No hay reportes recientes</Text>
+              <Text style={styles.emptyReportsText}>
+                No hay reportes recientes
+              </Text>
             </View>
           )}
         </View>
@@ -1023,10 +1081,10 @@ const styles = StyleSheet.create({
   },
   filtroContainer: {
     padding: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: "#F1F5F9",
     borderRadius: 12,
     margin: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -1034,12 +1092,12 @@ const styles = StyleSheet.create({
   },
   filtroTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontWeight: "600",
+    color: "#0F172A",
     marginBottom: 12,
   },
   filtroOptions: {
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   mesesScrollView: {
     paddingHorizontal: 4,
@@ -1048,29 +1106,29 @@ const styles = StyleSheet.create({
   filtroItem: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: "#E2E8F0",
     borderRadius: 20,
     marginHorizontal: 6,
     marginVertical: 4,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: "#CBD5E1",
   },
   filtroItemSelected: {
-    backgroundColor: '#1D4ED8',
-    borderColor: '#1E40AF',
+    backgroundColor: "#1D4ED8",
+    borderColor: "#1E40AF",
   },
   filtroItemText: {
-    color: '#334155',
-    fontWeight: '500',
+    color: "#334155",
+    fontWeight: "500",
   },
   filtroItemTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   aniosContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
     marginTop: 10,
   },
 });
