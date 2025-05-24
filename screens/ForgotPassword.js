@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,16 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../src/config/firebaseConfig";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { ThemeContext } from "../src/context/ThemeContext";
 
-export default function ChangePasswordScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [showEmail, setShowEmail] = useState(true); // ojo si quieres ocultar el email
   const [isLoading, setIsLoading] = useState(false);
+
+  // Contexto de tema global
+  const { theme } = useContext(ThemeContext);
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   const handleSendReset = async () => {
     if (!email.trim()) {
@@ -45,37 +50,38 @@ export default function ChangePasswordScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reiniciar contraseña</Text>
-      <View style={styles.inputContainer}>
-        <Ionicons name="mail-outline" size={22} color="#0370b7" />
+    <View style={themeStyles.container}>
+      <Text style={themeStyles.title}>Reiniciar contraseña</Text>
+      <View style={themeStyles.inputContainer}>
+        <Ionicons name="mail-outline" size={22} color={theme === "light" ? "#0370b7" : "#60a5fa"} />
         <TextInput
-          style={styles.input}
+          style={themeStyles.input}
           placeholder="Correo electrónico"
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          placeholderTextColor="#888"
+          placeholderTextColor={theme === "light" ? "#888" : "#bbb"}
         />
       </View>
 
       <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
+        style={[themeStyles.button, isLoading && themeStyles.buttonDisabled]}
         onPress={handleSendReset}
         disabled={isLoading}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Enviar enlace por correo</Text>
+          <Text style={themeStyles.buttonText}>Enviar enlace por correo</Text>
         )}
       </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -98,6 +104,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 50,
     marginBottom: 16,
+    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
@@ -107,6 +114,55 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#0370b7",
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "#0f172a",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 24,
+    color: "#60a5fa",
+    textAlign: "center",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#60a5fa",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 50,
+    marginBottom: 16,
+    backgroundColor: "#1e293b",
+  },
+  input: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#fff",
+  },
+  button: {
+    backgroundColor: "#2563eb",
     height: 50,
     borderRadius: 12,
     justifyContent: "center",

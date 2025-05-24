@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import {
   View,
   Text,
@@ -31,7 +31,8 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef } from "react"; // Ya puede estar importado por default
+import { useRef } from "react";
+import { ThemeContext } from "../src/context/ThemeContext"; // Importa el contexto de tema
 
 const HomeScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -105,10 +106,10 @@ const HomeScreen = ({ navigation }) => {
     const date = timestamp.seconds
       ? new Date(timestamp.seconds * 1000)
       : timestamp.toDate && typeof timestamp.toDate === "function"
-      ? timestamp.toDate()
-      : timestamp instanceof Date
-      ? timestamp
-      : null;
+        ? timestamp.toDate()
+        : timestamp instanceof Date
+          ? timestamp
+          : null;
 
     if (!date) return "Fecha no disponible";
 
@@ -290,22 +291,22 @@ const HomeScreen = ({ navigation }) => {
 
   // Componente para seleccionar mes y año
   const renderFiltroFecha = () => (
-    <View style={styles.filtroContainer}>
-      <Text style={styles.filtroTitle}>Seleccionar Fecha</Text>
+    <View style={themeStyles.filtroContainer}>
+      <Text style={themeStyles.filtroTitle}>Seleccionar Fecha</Text>
 
-      <View style={styles.filtroOptions}>
+      <View style={themeStyles.filtroOptions}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.mesesScrollView}
+          contentContainerStyle={themeStyles.mesesScrollView}
           ref={scrollRefMeses}
         >
           {nombresMeses.map((mes, index) => (
             <TouchableOpacity
               key={`mes-${index}`}
               style={[
-                styles.filtroItem,
-                filtroMes === index && styles.filtroItemSelected,
+                themeStyles.filtroItem,
+                filtroMes === index && themeStyles.filtroItemSelected,
               ]}
               onPress={() => {
                 setFiltroMes(index);
@@ -314,8 +315,8 @@ const HomeScreen = ({ navigation }) => {
             >
               <Text
                 style={[
-                  styles.filtroItemText,
-                  filtroMes === index && styles.filtroItemTextSelected,
+                  themeStyles.filtroItemText,
+                  filtroMes === index && themeStyles.filtroItemTextSelected,
                 ]}
               >
                 {mes}
@@ -324,13 +325,13 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </ScrollView>
 
-        <View style={styles.aniosContainer}>
+        <View style={themeStyles.aniosContainer}>
           {aniosDisponibles.map((anio) => (
             <TouchableOpacity
               key={`anio-${anio}`}
               style={[
-                styles.filtroItem,
-                filtroAnio === anio && styles.filtroItemSelected,
+                themeStyles.filtroItem,
+                filtroAnio === anio && themeStyles.filtroItemSelected,
               ]}
               onPress={() => {
                 setFiltroAnio(anio);
@@ -339,8 +340,8 @@ const HomeScreen = ({ navigation }) => {
             >
               <Text
                 style={[
-                  styles.filtroItemText,
-                  filtroAnio === anio && styles.filtroItemTextSelected,
+                  themeStyles.filtroItemText,
+                  filtroAnio === anio && themeStyles.filtroItemTextSelected,
                 ]}
               >
                 {anio}
@@ -392,57 +393,61 @@ const HomeScreen = ({ navigation }) => {
     <TouchableOpacity
       onPress={() => handleNotificationPress(item.id)}
       style={[
-        styles.notificationItem,
-        item.isNew && styles.newNotificationItem,
+        themeStyles.notificationItem,
+        item.isNew && themeStyles.newNotificationItem,
       ]}
     >
-      <View style={styles.notificationIconContainer}>
+      <View style={themeStyles.notificationIconContainer}>
         <View
           style={[
-            styles.notificationIcon,
+            themeStyles.notificationIcon,
             { backgroundColor: getTipoColor(item.tipo) },
           ]}
         >
           <FontAwesome5 name={getTipoIcon(item.tipo)} size={16} color="#fff" />
         </View>
       </View>
-      <View style={styles.notificationContent}>
-        <View style={styles.notificationHeader}>
-          <Text style={styles.notificationText}>{item.title}</Text>
+      <View style={themeStyles.notificationContent}>
+        <View style={themeStyles.notificationHeader}>
+          <Text style={themeStyles.notificationText}>{item.title}</Text>
           {item.isNew && (
-            <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>Nuevo</Text>
+            <View style={themeStyles.newBadge}>
+              <Text style={themeStyles.newBadgeText}>Nuevo</Text>
             </View>
           )}
         </View>
-        <Text style={styles.notificationBody}>{item.body}</Text>
-        <View style={styles.notificationFooter}>
-          <Text style={styles.notificationLocation}>
+        <Text style={themeStyles.notificationBody}>{item.body}</Text>
+        <View style={themeStyles.notificationFooter}>
+          <Text style={themeStyles.notificationLocation}>
             <FontAwesome5 name="map-marker-alt" size={10} color="#64748B" />{" "}
             {item.ubicacion}
           </Text>
-          <Text style={styles.notificationTime}>{item.time}</Text>
+          <Text style={themeStyles.notificationTime}>{item.time}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+  // Contexto de tema global
+  const { theme } = useContext(ThemeContext);
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
-      <LinearGradient colors={["#0F172A", "#1E293B"]} style={styles.header}>
-        <View style={styles.headerContent}>
+  return (
+    <SafeAreaView style={themeStyles.safeArea}>
+      <StatusBar barStyle={theme === "light" ? "dark-content" : "light-content"} backgroundColor={theme === "light" ? "#F1F5F9" : "#0F172A"} />
+
+      <LinearGradient colors={theme === "light" ? ["#0F172A", "#1E293B"] : ["#0F172A", "#1E293B"]} style={themeStyles.header}>
+        <View style={themeStyles.headerContent}>
           <View>
-            <Text style={[styles.greeting, { marginTop: 10 }]}>
+            <Text style={[themeStyles.greeting, { marginTop: 10 }]}>
               Hola, {userInfo.firstName}
             </Text>
-            <Text style={styles.subtitle}>Manteniendo seguro tu barrio</Text>
+            <Text style={themeStyles.subtitle}>Manteniendo seguro tu barrio</Text>
           </View>
 
-          <View style={styles.headerActions}>
+          <View style={themeStyles.headerActions}>
             <TouchableOpacity
-              style={styles.notificationBell}
+              style={themeStyles.notificationBell}
               onPress={() => {
                 setViewingAllNotifications(false);
                 setModalVisible(true);
@@ -450,8 +455,8 @@ const HomeScreen = ({ navigation }) => {
             >
               <FontAwesome5 name="bell" size={22} color="#CBD5E1" />
               {cantidadNotificaciones > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
+                <View style={themeStyles.badge}>
+                  <Text style={themeStyles.badgeText}>
                     {cantidadNotificaciones > 9 ? "9+" : cantidadNotificaciones}
                   </Text>
                 </View>
@@ -459,17 +464,17 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.profileImageContainer}
+              style={themeStyles.profileImageContainer}
               onPress={() => navigation.navigate("Perfil")}
             >
               {userInfo.photoURL ? (
                 <Image
                   source={{ uri: userInfo.photoURL }}
-                  style={styles.profileImage}
+                  style={themeStyles.profileImage}
                 />
               ) : (
-                <View style={styles.profilePlaceholder}>
-                  <Text style={styles.profileInitial}>
+                <View style={themeStyles.profilePlaceholder}>
+                  <Text style={themeStyles.profileInitial}>
                     {userInfo.firstName ? userInfo.firstName[0] : "U"}
                   </Text>
                 </View>
@@ -490,11 +495,11 @@ const HomeScreen = ({ navigation }) => {
           setMostrarFiltro(false);
         }}
       >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHandle}></View>
+        <View style={themeStyles.modalBackground}>
+          <View style={themeStyles.modalContainer}>
+            <View style={themeStyles.modalHandle}></View>
 
-            <Text style={styles.modalTitle}>
+            <Text style={themeStyles.modalTitle}>
               {viewingAllNotifications
                 ? "Historial de Notificaciones"
                 : "Notificaciones Recientes"}
@@ -503,15 +508,15 @@ const HomeScreen = ({ navigation }) => {
             {/* Mostrar filtro de fecha solo cuando se ven todas las notificaciones */}
             {viewingAllNotifications && (
               <>
-                <View style={styles.filtroHeader}>
-                  <Text style={styles.filtroLabel}>
+                <View style={themeStyles.filtroHeader}>
+                  <Text style={themeStyles.filtroLabel}>
                     {nombresMeses[filtroMes]} {filtroAnio}
                   </Text>
                   <TouchableOpacity
-                    style={styles.filtroToggleButton}
+                    style={themeStyles.filtroToggleButton}
                     onPress={() => setMostrarFiltro(!mostrarFiltro)}
                   >
-                    <Text style={styles.filtroToggleText}>
+                    <Text style={themeStyles.filtroToggleText}>
                       {mostrarFiltro ? "Ocultar filtro" : "Cambiar fecha"}
                     </Text>
                     <FontAwesome5
@@ -531,7 +536,7 @@ const HomeScreen = ({ navigation }) => {
               <ActivityIndicator
                 size="large"
                 color="#3B82F6"
-                style={styles.loadingIndicator}
+                style={themeStyles.loadingIndicator}
               />
             ) : (
               <>
@@ -545,13 +550,13 @@ const HomeScreen = ({ navigation }) => {
                     }
                     renderItem={renderNotificationItem}
                     keyExtractor={(item) => item.id}
-                    style={styles.notificationList}
+                    style={themeStyles.notificationList}
                     showsVerticalScrollIndicator={false}
                   />
                 ) : (
-                  <View style={styles.emptyNotifications}>
+                  <View style={themeStyles.emptyNotifications}>
                     <FontAwesome5 name="bell-slash" size={48} color="#CBD5E1" />
-                    <Text style={styles.emptyNotificationsText}>
+                    <Text style={themeStyles.emptyNotificationsText}>
                       {viewingAllNotifications
                         ? `No hay notificaciones en ${nombresMeses[filtroMes]} ${filtroAnio}`
                         : "No hay notificaciones recientes"}
@@ -564,46 +569,46 @@ const HomeScreen = ({ navigation }) => {
             {!viewingAllNotifications && (
               <TouchableOpacity
                 onPress={fetchAllNotifications}
-                style={styles.viewAllButton}
+                style={themeStyles.viewAllButton}
               >
-                <Text style={styles.viewAllButtonText}>
+                <Text style={themeStyles.viewAllButtonText}>
                   Ver historial de notificaciones
                 </Text>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity
-              style={styles.closeButton}
+              style={themeStyles.closeButton}
               onPress={() => {
                 setModalVisible(false);
                 setViewingAllNotifications(false);
                 setMostrarFiltro(false);
               }}
             >
-              <Text style={styles.closeButtonText}>Cerrar</Text>
+              <Text style={themeStyles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <View style={styles.content}>
-        <Animated.View style={[styles.welcomeCard, { opacity: fadeAnim }]}>
+      <View style={themeStyles.content}>
+        <Animated.View style={[themeStyles.welcomeCard, { opacity: fadeAnim }]}>
           <LinearGradient
             colors={["#3B82F6", "#2563EB"]}
-            style={styles.welcomeGradient}
+            style={themeStyles.welcomeGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <View style={styles.welcomeContent}>
+            <View style={themeStyles.welcomeContent}>
               <FontAwesome5
                 name="shield-alt"
                 size={28}
                 color="#FFFFFF"
-                style={styles.welcomeIcon}
+                style={themeStyles.welcomeIcon}
               />
               <View>
-                <Text style={styles.welcomeText}>Seguridad Ciudadana</Text>
-                <Text style={styles.welcomeSubtext}>
+                <Text style={themeStyles.welcomeText}>Seguridad Ciudadana</Text>
+                <Text style={themeStyles.welcomeSubtext}>
                   Reporta incidentes en tu zona
                 </Text>
               </View>
@@ -611,52 +616,52 @@ const HomeScreen = ({ navigation }) => {
           </LinearGradient>
         </Animated.View>
 
-        <View style={styles.actionCardsContainer}>
-          <Text style={styles.sectionTitle}>Acciones rápidas</Text>
+        <View style={themeStyles.actionCardsContainer}>
+          <Text style={themeStyles.sectionTitle}>Acciones rápidas</Text>
 
-          <View style={styles.actionCards}>
+          <View style={themeStyles.actionCards}>
             <TouchableOpacity
-              style={styles.actionCard}
+              style={themeStyles.actionCard}
               onPress={() => navigation.navigate("Takephoto")}
             >
               <View
-                style={[styles.actionIconBg, { backgroundColor: "#EF4444" }]}
+                style={[themeStyles.actionIconBg, { backgroundColor: "#EF4444" }]}
               >
                 <FontAwesome5 name="camera" size={22} color="#fff" />
               </View>
-              <Text style={styles.actionCardText}>Nuevo Reporte</Text>
+              <Text style={themeStyles.actionCardText}>Nuevo Reporte</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
+              style={themeStyles.actionCard}
               onPress={() => navigation.navigate("Reportes")}
             >
               <View
-                style={[styles.actionIconBg, { backgroundColor: "#10B981" }]}
+                style={[themeStyles.actionIconBg, { backgroundColor: "#10B981" }]}
               >
                 <FontAwesome5 name="clipboard-list" size={22} color="#fff" />
               </View>
-              <Text style={styles.actionCardText}>Reportes</Text>
+              <Text style={themeStyles.actionCardText}>Reportes</Text>
             </TouchableOpacity>
 
             {userInfo.role === "admin" && (
               <TouchableOpacity
-                style={styles.actionCard}
+                style={themeStyles.actionCard}
                 onPress={() => navigation.navigate("AdminScreen")}
               >
                 <View
-                  style={[styles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
+                  style={[themeStyles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
                 >
                   <FontAwesome5 name="user-shield" size={22} color="#fff" />
                 </View>
-                <Text style={styles.actionCardText}>Panel Admin</Text>
+                <Text style={themeStyles.actionCardText}>Panel Admin</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        <View style={styles.recentReportsContainer}>
-          <Text style={styles.sectionTitle}>Reportes recientes</Text>
+        <View style={themeStyles.recentReportsContainer}>
+          <Text style={themeStyles.sectionTitle}>Reportes recientes</Text>
 
           {reportes.length > 0 ? (
             <FlatList
@@ -664,17 +669,17 @@ const HomeScreen = ({ navigation }) => {
               keyExtractor={(item) => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recentReportsList}
+              contentContainerStyle={themeStyles.recentReportsList}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.recentReportCard}
+                  style={themeStyles.recentReportCard}
                   onPress={() =>
                     navigation.navigate("ReporteDetalle", { reportId: item.id })
                   }
                 >
                   <View
                     style={[
-                      styles.reportTypeTag,
+                      themeStyles.reportTypeTag,
                       { backgroundColor: getTipoColor(item.tipo || "General") },
                     ]}
                   >
@@ -683,12 +688,12 @@ const HomeScreen = ({ navigation }) => {
                       size={12}
                       color="#fff"
                     />
-                    <Text style={styles.reportTypeText}>
+                    <Text style={themeStyles.reportTypeText}>
                       {item.tipo || "General"}
                     </Text>
                   </View>
 
-                  <Text style={styles.recentReportTitle} numberOfLines={2}>
+                  <Text style={themeStyles.recentReportTitle} numberOfLines={2}>
                     {item.descripcion
                       ? item.descripcion.substring(0, 60)
                       : "Sin descripción"}
@@ -697,8 +702,8 @@ const HomeScreen = ({ navigation }) => {
                       : ""}
                   </Text>
 
-                  <View style={styles.recentReportFooter}>
-                    <Text style={styles.recentReportTime}>
+                  <View style={themeStyles.recentReportFooter}>
+                    <Text style={themeStyles.recentReportTime}>
                       {formatTimestamp(item.creadoEn)}
                     </Text>
                   </View>
@@ -706,9 +711,9 @@ const HomeScreen = ({ navigation }) => {
               )}
             />
           ) : (
-            <View style={styles.emptyReportsContainer}>
+            <View style={themeStyles.emptyReportsContainer}>
               <FontAwesome5 name="clipboard" size={40} color="#CBD5E1" />
-              <Text style={styles.emptyReportsText}>
+              <Text style={themeStyles.emptyReportsText}>
                 No hay reportes recientes
               </Text>
             </View>
@@ -721,7 +726,8 @@ const HomeScreen = ({ navigation }) => {
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#F1F5F9",
@@ -741,7 +747,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#fff",
   },
   subtitle: {
     fontSize: 14,
@@ -825,11 +831,11 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#fff",
   },
   welcomeSubtext: {
     fontSize: 14,
-    color: "#E0E7FF",
+    color: "#bbb",
     marginTop: 4,
   },
   sectionTitle: {
@@ -981,6 +987,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
+    marginBottom: 10,
+    backgroundColor: "#f2f5f7",
+    borderRadius: 14,
   },
   notificationIconContainer: {
     marginRight: 16,
@@ -1081,7 +1090,7 @@ const styles = StyleSheet.create({
   },
   filtroContainer: {
     padding: 16,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#fff", // Fondo claro
     borderRadius: 12,
     margin: 16,
     shadowColor: "#000",
@@ -1093,7 +1102,7 @@ const styles = StyleSheet.create({
   filtroTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0F172A",
+    color: "#0F172A", // Texto oscuro
     marginBottom: 12,
   },
   filtroOptions: {
@@ -1106,7 +1115,7 @@ const styles = StyleSheet.create({
   filtroItem: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#F1F5F9", // Fondo claro para los items
     borderRadius: 20,
     marginHorizontal: 6,
     marginVertical: 4,
@@ -1114,11 +1123,11 @@ const styles = StyleSheet.create({
     borderColor: "#CBD5E1",
   },
   filtroItemSelected: {
-    backgroundColor: "#1D4ED8",
+    backgroundColor: "#2563EB",
     borderColor: "#1E40AF",
   },
   filtroItemText: {
-    color: "#334155",
+    color: "#0F172A", // Texto oscuro
     fontWeight: "500",
   },
   filtroItemTextSelected: {
@@ -1130,5 +1139,473 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     marginTop: 10,
+  },
+  filtroHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    marginHorizontal: 8,
+  },
+  filtroLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0F172A", // Texto oscuro
+  },
+  filtroToggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: "#F1F5F9", // Fondo claro
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+  },
+  filtroToggleText: {
+    color: "#2563EB", // Azul
+    fontWeight: "600",
+    fontSize: 14,
+  },
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 3,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#bbb",
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  notificationBell: {
+    marginRight: 15,
+    padding: 8,
+  },
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  profileImageContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#2563EB",
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+  },
+  profilePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#2563EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInitial: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  welcomeCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 24,
+    elevation: 4,
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  welcomeGradient: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  welcomeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  welcomeIcon: {
+    marginRight: 15,
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  welcomeSubtext: {
+    fontSize: 14,
+    color: "#bbb",
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 16,
+  },
+  actionCardsContainer: {
+    marginBottom: 24,
+  },
+  actionCards: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  actionCard: {
+    backgroundColor: "#181C23", // Más claro que #111, pero sigue siendo oscuro
+    borderRadius: 16,
+    padding: 16,
+    width: "30%",
+    alignItems: "center",
+    shadowColor: "#222",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10, // Un poco más de sombra para resaltar
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  actionIconBg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  actionCardText: {
+    fontSize: 13,
+    color: "#fff",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  recentReportsContainer: {
+    marginBottom: 20,
+  },
+  recentReportsList: {
+    paddingRight: 20,
+  },
+  recentReportCard: {
+    backgroundColor: "#181C23", // Igual que actionCard para coherencia
+    borderRadius: 16,
+    padding: 16,
+    width: 230,
+    marginRight: 15,
+    shadowColor: "#222",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  reportTypeTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 30,
+    alignSelf: "flex-start",
+    marginBottom: 10,
+  },
+  reportTypeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  recentReportTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: 12,
+  },
+  recentReportFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  recentReportLocation: {
+    fontSize: 12,
+    color: "#bbb",
+    flex: 1,
+  },
+  recentReportTime: {
+    fontSize: 12,
+    color: "#bbb",
+    fontWeight: "500",
+  },
+  emptyReportsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#111",
+    borderRadius: 16,
+    padding: 30,
+    shadowColor: "#222",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  emptyReportsText: {
+    fontSize: 16,
+    color: "#bbb",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(15, 23, 42, 0.7)",
+  },
+  modalContainer: {
+    backgroundColor: "#111",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 30,
+    height: "80%",
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#222",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  notificationList: {
+    maxHeight: "70%",
+  },
+  notificationItem: {
+    flexDirection: "row",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#222",
+    backgroundColor: "#181C23",
+    marginBottom: 10,
+    borderRadius: 14,
+  },
+  notificationIconContainer: {
+    marginRight: 16,
+  },
+  notificationIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  newNotificationItem: {
+    backgroundColor: "#222",
+  },
+  notificationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  notificationText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    flex: 1,
+  },
+  newBadge: {
+    backgroundColor: "#10B981",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  newBadgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  notificationBody: {
+    fontSize: 14,
+    color: "#bbb",
+    marginBottom: 8,
+  },
+  notificationFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  notificationLocation: {
+    fontSize: 12,
+    color: "#bbb",
+    flex: 1,
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: "#bbb",
+    fontWeight: "500",
+  },
+  emptyNotifications: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyNotificationsText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#bbb",
+    textAlign: "center",
+  },
+  loadingIndicator: {
+    padding: 20,
+  },
+  viewAllButton: {
+    marginTop: 20,
+    backgroundColor: "#2563EB",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  viewAllButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  closeButton: {
+    marginTop: 12,
+    backgroundColor: "#222",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#bbb",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  filtroContainer: {
+    padding: 16,
+    backgroundColor: "#111", // Fondo oscuro para el filtro
+    borderRadius: 12,
+    margin: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  filtroTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#fff", // Texto claro
+    marginBottom: 12,
+  },
+  filtroOptions: {
+    flexDirection: "column",
+  },
+  mesesScrollView: {
+    paddingHorizontal: 4,
+    paddingBottom: 8,
+  },
+  filtroItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#222", // Fondo oscuro para los items
+    borderRadius: 20,
+    marginHorizontal: 6,
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  filtroItemSelected: {
+    backgroundColor: "#2563EB",
+    borderColor: "#1E40AF",
+  },
+  filtroItemText: {
+    color: "#bbb", // Texto claro
+    fontWeight: "500",
+  },
+  filtroItemTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  aniosContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  filtroHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    marginHorizontal: 8,
+  },
+  filtroLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff", // Texto claro
+  },
+  filtroToggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: "#222", // Fondo oscuro
+  },
+  filtroToggleText: {
+    color: "#3B82F6", // Azul
+    fontWeight: "600",
+    fontSize: 14,
   },
 });

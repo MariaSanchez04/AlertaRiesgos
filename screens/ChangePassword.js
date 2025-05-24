@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
+import { ThemeContext } from "../src/context/ThemeContext";
 
 export default function ChangePasswordScreen({ navigation }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -24,6 +25,10 @@ export default function ChangePasswordScreen({ navigation }) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Contexto de tema global
+  const { theme } = useContext(ThemeContext);
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   // Reautenticar al usuario
   const reauthenticate = (password) => {
@@ -71,28 +76,28 @@ export default function ChangePasswordScreen({ navigation }) {
     setShow,
     placeholder
   ) => (
-    <View style={styles.inputContainer}>
+    <View style={themeStyles.inputContainer}>
       <TextInput
-        style={styles.input}
+        style={themeStyles.input}
         placeholder={placeholder}
         secureTextEntry={!show}
         value={value}
         onChangeText={onChange}
-        placeholderTextColor="#888"
+        placeholderTextColor={theme === "light" ? "#888" : "#bbb"}
       />
-      <TouchableOpacity onPress={() => setShow(!show)} style={styles.eyeIcon}>
+      <TouchableOpacity onPress={() => setShow(!show)} style={themeStyles.eyeIcon}>
         <Ionicons
           name={show ? "eye-off-outline" : "eye-outline"}
           size={24}
-          color="#0370b7"
+          color={theme === "light" ? "#0370b7" : "#60a5fa"}
         />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Cambiar contraseña</Text>
+    <View style={themeStyles.container}>
+      <Text style={themeStyles.title}>Cambiar contraseña</Text>
 
       {renderPasswordInput(
         "Actual",
@@ -120,21 +125,22 @@ export default function ChangePasswordScreen({ navigation }) {
       )}
 
       <TouchableOpacity
-        style={styles.button}
+        style={themeStyles.button}
         onPress={handleChangePassword}
         disabled={isLoading}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>Actualizar contraseña</Text>
+          <Text style={themeStyles.buttonText}>Actualizar contraseña</Text>
         )}
       </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -157,6 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 15,
     height: 50,
+    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
@@ -168,6 +175,55 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#0370b7",
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#0f172a",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 24,
+    color: "#60a5fa",
+    textAlign: "center",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#60a5fa",
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 15,
+    height: 50,
+    backgroundColor: "#1e293b",
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#fff",
+  },
+  eyeIcon: {
+    padding: 5,
+  },
+  button: {
+    backgroundColor: "#2563eb",
     height: 50,
     borderRadius: 12,
     justifyContent: "center",

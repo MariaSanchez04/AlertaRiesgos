@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import {
   View,
   Text,
@@ -15,13 +15,18 @@ import { db } from "../src/config/firebaseConfig";
 import MapView, { Marker } from "react-native-maps";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemeContext } from "../src/context/ThemeContext";
 
-export default function ReporteDetalle() {
+export default function ReporteDetalle({ navigation }) {
   const route = useRoute();
   const { reportId } = route.params;
 
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(true);
+
+  // Contexto de tema global
+  const { theme } = useContext(ThemeContext);
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   const abrirEnGoogleMaps = () => {
     if (reporte?.latitud && reporte?.longitud) {
@@ -54,17 +59,17 @@ export default function ReporteDetalle() {
 
   if (cargando) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={themeStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#3F51B5" />
-        <Text style={styles.loadingText}>Cargando reporte...</Text>
+        <Text style={themeStyles.loadingText}>Cargando reporte...</Text>
       </View>
     );
   }
 
   if (!reporte) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No se encontró el reporte.</Text>
+      <View style={themeStyles.errorContainer}>
+        <Text style={themeStyles.errorText}>No se encontró el reporte.</Text>
       </View>
     );
   }
@@ -74,26 +79,38 @@ export default function ReporteDetalle() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.titulo}>Detalle del Reporte</Text>
+      <ScrollView contentContainerStyle={themeStyles.container}>
+        <View style={themeStyles.headerRow}>
+          <TouchableOpacity
+            style={themeStyles.headerBackButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={28}
+              color={theme === "light" ? "#1E293B" : "#fff"}
+            />
+          </TouchableOpacity>
+          <Text style={themeStyles.headerTitle}>Detalle del Reporte</Text>
+        </View>
 
         {imagenes.map((url, index) => (
           <Image
             key={index}
             source={{ uri: url }}
-            style={styles.imagen}
+            style={themeStyles.imagen}
             resizeMode="cover"
           />
         ))}
 
-        <Text style={styles.descripcion}>
+        <Text style={themeStyles.descripcion}>
           {reporte.descripcion || "Sin descripción"}
         </Text>
 
         {reporte.latitud && reporte.longitud ? (
-          <View style={styles.mapContainer}>
+          <View style={themeStyles.mapContainer}>
             <MapView
-              style={styles.mapa}
+              style={themeStyles.mapa}
               initialRegion={{
                 latitude: reporte.latitud,
                 longitude: reporte.longitud,
@@ -111,17 +128,17 @@ export default function ReporteDetalle() {
               />
             </MapView>
             <TouchableOpacity
-              style={styles.mapButton}
+              style={themeStyles.mapButton}
               onPress={abrirEnGoogleMaps}
             >
-              <Text style={styles.mapButtonText}>Ver en google maps</Text>
+              <Text style={themeStyles.mapButtonText}>Ver en google maps</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <Text style={styles.ubicacion}>Ubicación no disponible</Text>
+          <Text style={themeStyles.ubicacion}>Ubicación no disponible</Text>
         )}
 
-        <Text style={styles.fecha}>
+        <Text style={themeStyles.fecha}>
           {reporte.creadoEn
             ? `Publicado el ${moment(reporte.creadoEn.toDate()).format(
                 "DD/MM/YYYY hh:mm A"
@@ -133,22 +150,34 @@ export default function ReporteDetalle() {
   );
 }
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#F1F5F9",
     padding: 16,
   },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#475569",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#64748B",
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   titulo: {
     fontSize: 24,
@@ -169,6 +198,9 @@ const styles = StyleSheet.create({
     color: "#1E293B",
     marginBottom: 16,
   },
+  mapContainer: {
+    marginBottom: 16,
+  },
   mapa: {
     width: "100%",
     height: 180,
@@ -187,10 +219,127 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+  ubicacion: {
+    color: "#64748B",
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: "center",
+  },
   fecha: {
     fontSize: 14,
     color: "#94A3B8",
     marginTop: 16,
     textAlign: "center",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1E293B",
+  },
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: "#000",
+    padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#bbb",
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  titulo: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  imagen: {
+    width: "100%",
+    height: 220,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  descripcion: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: 16,
+  },
+  mapContainer: {
+    marginBottom: 16,
+  },
+  mapa: {
+    width: "100%",
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  mapButton: {
+    backgroundColor: "#2563EB",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  mapButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  ubicacion: {
+    color: "#bbb",
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  fecha: {
+    fontSize: 14,
+    color: "#bbb",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#fff",
   },
 });

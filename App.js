@@ -1,6 +1,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import { ThemeProvider } from "./src/context/ThemeContext";
 
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
@@ -17,6 +18,7 @@ const Stack = createStackNavigator();
 
 export default function App() {
   return (
+    <ThemeProvider>
     <NavigationContainer>
       <Stack.Navigator>
         {/* Pantalla de inicio de sesión */}
@@ -90,5 +92,6 @@ export default function App() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    </ThemeProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -33,8 +33,380 @@ import {
   mostrarNotificacion,
 } from "../src/config/notificationsHelper";
 import { getAuth } from "firebase/auth";
+import { ThemeContext } from "../src/context/ThemeContext"; // Importa el contexto de tema
 
 const { width } = Dimensions.get("window");
+
+// Estilos base para ambos temas
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+  },
+  header: {
+    backgroundColor: "#3B82F6",
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  headerBackButton: {
+    marginRight: 10,
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+    textAlign: "left",
+    flex: 1,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 4,
+    textAlign: "left",
+  },
+  stepIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20,
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 4,
+  },
+  activeStepCircle: {
+    backgroundColor: "#3B82F6",
+  },
+  stepNumber: {
+    color: "#64748B",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  activeStepNumber: {
+    color: "#fff",
+  },
+  stepText: {
+    marginLeft: 8,
+    color: "#64748B",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  activeStepText: {
+    color: "#3B82F6",
+  },
+  stepLine: {
+    width: 30,
+    height: 2,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 4,
+  },
+  stepContainer: {
+    marginBottom: 24,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 12,
+  },
+  textArea: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 16,
+    fontSize: 16,
+    color: "#1E293B",
+    minHeight: 120,
+    textAlignVertical: "top",
+  },
+  buttonContainer: {
+    marginTop: 16,
+    alignItems: "flex-end",
+  },
+  nextButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#3B82F6",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  nextButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  disabledButton: {
+    backgroundColor: "#CBD5E1",
+  },
+  mediaTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 16,
+  },
+  mediaButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  mediaButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2563EB",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    marginHorizontal: 5,
+  },
+  mediaButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 8,
+  },
+  imagesContainer: {
+    marginBottom: 16,
+  },
+  imagesCount: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 12,
+  },
+  imagesScroll: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  imageWrapper: {
+    position: "relative",
+    marginRight: 12,
+  },
+  thumbnailImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#3B82F6",
+  },
+  deleteImageButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    padding: 2,
+    zIndex: 2,
+  },
+  noImagesContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 24,
+  },
+  noImagesText: {
+    fontSize: 16,
+    color: "#64748B",
+    marginTop: 12,
+  },
+  navigationButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#3B82F6",
+    backgroundColor: "#fff",
+  },
+  backButtonText: {
+    color: "#3B82F6",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  submitButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10B981",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  locationTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 16,
+  },
+  errorContainer: {
+    backgroundColor: "#FEE2E2",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#EF4444",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#EF4444",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  mapWrapper: {
+    height: 200,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+  mapOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  mapInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  locationInfo: {
+    fontSize: 14,
+    color: "#fff",
+    marginLeft: 6,
+  },
+  loadingLocation: {
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  loadingLocationText: {
+    fontSize: 16,
+    color: "#64748B",
+    marginTop: 12,
+  },
+  summaryContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginBottom: 12,
+  },
+  summaryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#64748B",
+    fontWeight: "600",
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: "#1E293B",
+    flex: 1,
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 2,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 20,
+    padding: 6,
+  },
+  modalImage: {
+    width: width - 40,
+    height: width - 40,
+    borderRadius: 16,
+    marginTop: 60,
+  },
+});
 
 export default function ReportScreen() {
   const [imagenes, setImagenes] = useState([]);
@@ -46,6 +418,10 @@ export default function ReportScreen() {
   const [step, setStep] = useState(1); // Para el flujo de pasos: 1=Descripción, 2=Imágenes, 3=Ubicación
 
   const navigation = useNavigation();
+
+  // Contexto de tema global
+  const { theme } = useContext(ThemeContext);
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   const obtenerUbicacion = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -188,52 +564,70 @@ export default function ReportScreen() {
 
   const renderStepIndicator = () => {
     return (
-      <View style={styles.stepIndicator}>
+      <View style={themeStyles.stepIndicator}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View
-            style={[styles.stepCircle, step >= 1 && styles.activeStepCircle]}
+            style={[
+              themeStyles.stepCircle,
+              step >= 1 && themeStyles.activeStepCircle,
+            ]}
           >
             <Text
-              style={[styles.stepNumber, step >= 1 && styles.activeStepNumber]}
+              style={[
+                themeStyles.stepNumber,
+                step >= 1 && themeStyles.activeStepNumber,
+              ]}
             >
               1
             </Text>
           </View>
-          <Text style={[styles.stepText, step === 1 && styles.activeStepText]}>
+          <Text style={[themeStyles.stepText, step === 1 && themeStyles.activeStepText]}>
             Descripción
           </Text>
         </View>
 
-        <View style={styles.stepLine} />
+        <View style={themeStyles.stepLine} />
 
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View
-            style={[styles.stepCircle, step >= 2 && styles.activeStepCircle]}
+            style={[
+              themeStyles.stepCircle,
+              step >= 2 && themeStyles.activeStepCircle,
+            ]}
           >
             <Text
-              style={[styles.stepNumber, step >= 2 && styles.activeStepNumber]}
+              style={[
+                themeStyles.stepNumber,
+                step >= 2 && themeStyles.activeStepNumber,
+              ]}
             >
               2
             </Text>
           </View>
-          <Text style={[styles.stepText, step === 2 && styles.activeStepText]}>
+          <Text style={[themeStyles.stepText, step === 2 && themeStyles.activeStepText]}>
             Fotos
           </Text>
         </View>
 
-        <View style={styles.stepLine} />
+        <View style={themeStyles.stepLine} />
 
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View
-            style={[styles.stepCircle, step >= 3 && styles.activeStepCircle]}
+            style={[
+              themeStyles.stepCircle,
+              step >= 3 && themeStyles.activeStepCircle,
+            ]}
           >
             <Text
-              style={[styles.stepNumber, step >= 3 && styles.activeStepNumber]}
+              style={[
+                themeStyles.stepNumber,
+                step >= 3 && themeStyles.activeStepNumber,
+              ]}
             >
               3
             </Text>
           </View>
-          <Text style={[styles.stepText, step === 3 && styles.activeStepText]}>
+          <Text style={[themeStyles.stepText, step === 3 && themeStyles.activeStepText]}>
             Ubicación
           </Text>
         </View>
@@ -243,29 +637,32 @@ export default function ReportScreen() {
 
   const renderStep1 = () => {
     return (
-      <View style={styles.stepContainer}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>
+      <View style={themeStyles.stepContainer}>
+        <View style={themeStyles.inputContainer}>
+          <Text style={themeStyles.inputLabel}>
             ¿Qué situación de seguridad quieres reportar?
           </Text>
           <TextInput
             value={descripcion}
             onChangeText={setDescripcion}
             placeholder="Describe el problema de seguridad que has observado..."
-            style={styles.textArea}
+            style={themeStyles.textArea}
             multiline={true}
             numberOfLines={6}
-            placeholderTextColor="#A0A0A0"
+            placeholderTextColor={theme === "light" ? "#A0A0A0" : "#bbb"}
           />
         </View>
 
-        <View style={styles.buttonContainer}>
+        <View style={themeStyles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.nextButton, !descripcion && styles.disabledButton]}
+            style={[
+              themeStyles.nextButton,
+              !descripcion && themeStyles.disabledButton,
+            ]}
             onPress={() => (descripcion ? setStep(2) : null)}
             disabled={!descripcion}
           >
-            <Text style={styles.nextButtonText}>Continuar</Text>
+            <Text style={themeStyles.nextButtonText}>Continuar</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
@@ -275,52 +672,52 @@ export default function ReportScreen() {
 
   const renderStep2 = () => {
     return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.mediaTitle}>Añade evidencia fotográfica</Text>
+      <View style={themeStyles.stepContainer}>
+        <Text style={themeStyles.mediaTitle}>Añade evidencia fotográfica</Text>
 
-        <View style={styles.mediaButtons}>
+        <View style={themeStyles.mediaButtons}>
           <TouchableOpacity
-            style={styles.mediaButton}
+            style={themeStyles.mediaButton}
             onPress={tomarFoto}
             disabled={cargando}
           >
             <Ionicons name="camera" size={28} color="#FFF" />
-            <Text style={styles.mediaButtonText}>Tomar foto</Text>
+            <Text style={themeStyles.mediaButtonText}>Tomar foto</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.mediaButton}
+            style={themeStyles.mediaButton}
             onPress={seleccionarImagenes}
             disabled={cargando}
           >
             <Ionicons name="images" size={28} color="#FFF" />
-            <Text style={styles.mediaButtonText}>Galería</Text>
+            <Text style={themeStyles.mediaButtonText}>Galería</Text>
           </TouchableOpacity>
         </View>
 
         {imagenes.length > 0 ? (
-          <View style={styles.imagesContainer}>
-            <Text style={styles.imagesCount}>
+          <View style={themeStyles.imagesContainer}>
+            <Text style={themeStyles.imagesCount}>
               {imagenes.length} imagen(es) seleccionada(s)
             </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.imagesScroll}
+              contentContainerStyle={themeStyles.imagesScroll}
             >
               {imagenes.map((imagen, index) => (
-                <View key={index} style={styles.imageWrapper}>
+                <View key={index} style={themeStyles.imageWrapper}>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setImagenSeleccionada(imagen.uri)}
                   >
                     <Image
                       source={{ uri: imagen.uri }}
-                      style={styles.thumbnailImage}
+                      style={themeStyles.thumbnailImage}
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.deleteImageButton}
+                    style={themeStyles.deleteImageButton}
                     onPress={() => eliminarImagen(imagen.uri)}
                   >
                     <Ionicons name="close-circle" size={22} color="#FFF" />
@@ -330,36 +727,36 @@ export default function ReportScreen() {
             </ScrollView>
           </View>
         ) : (
-          <View style={styles.noImagesContainer}>
+          <View style={themeStyles.noImagesContainer}>
             <MaterialCommunityIcons
               name="file-image-outline"
               size={60}
               color="#CCCCCC"
             />
-            <Text style={styles.noImagesText}>
+            <Text style={themeStyles.noImagesText}>
               No has seleccionado imágenes
             </Text>
           </View>
         )}
 
-        <View style={styles.navigationButtons}>
+        <View style={themeStyles.navigationButtons}>
           <TouchableOpacity
-            style={styles.backButton}
+            style={themeStyles.backButton}
             onPress={() => setStep(1)}
           >
             <Ionicons name="arrow-back" size={20} color="#3F51B5" />
-            <Text style={styles.backButtonText}>Atrás</Text>
+            <Text style={themeStyles.backButtonText}>Atrás</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.nextButton,
-              imagenes.length === 0 && styles.disabledButton,
+              themeStyles.nextButton,
+              imagenes.length === 0 && themeStyles.disabledButton,
             ]}
             onPress={() => (imagenes.length > 0 ? setStep(3) : null)}
             disabled={imagenes.length === 0}
           >
-            <Text style={styles.nextButtonText}>Continuar</Text>
+            <Text style={themeStyles.nextButtonText}>Continuar</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
@@ -369,26 +766,26 @@ export default function ReportScreen() {
 
   const renderStep3 = () => {
     return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.locationTitle}>
+      <View style={themeStyles.stepContainer}>
+        <Text style={themeStyles.locationTitle}>
           Confirma la ubicación del incidente
         </Text>
 
         {ubicacionError ? (
-          <View style={styles.errorContainer}>
+          <View style={themeStyles.errorContainer}>
             <Ionicons name="warning" size={24} color="#F44336" />
-            <Text style={styles.errorText}>{ubicacionError}</Text>
+            <Text style={themeStyles.errorText}>{ubicacionError}</Text>
             <TouchableOpacity
-              style={styles.retryButton}
+              style={themeStyles.retryButton}
               onPress={obtenerUbicacion}
             >
-              <Text style={styles.retryButtonText}>Reintentar</Text>
+              <Text style={themeStyles.retryButtonText}>Reintentar</Text>
             </TouchableOpacity>
           </View>
         ) : ubicacion ? (
-          <View style={styles.mapWrapper}>
+          <View style={themeStyles.mapWrapper}>
             <MapView
-              style={styles.map}
+              style={themeStyles.map}
               initialRegion={{
                 latitude: ubicacion.latitude,
                 longitude: ubicacion.longitude,
@@ -404,32 +801,32 @@ export default function ReportScreen() {
                 title="Ubicación del reporte"
               />
             </MapView>
-            <View style={styles.mapOverlay}>
-              <View style={styles.mapInfo}>
+            <View style={themeStyles.mapOverlay}>
+              <View style={themeStyles.mapInfo}>
                 <Ionicons name="location" size={18} color="#3F51B5" />
-                <Text style={styles.locationInfo}>
+                <Text style={themeStyles.locationInfo}>
                   Ubicación actual detectada
                 </Text>
               </View>
             </View>
           </View>
         ) : (
-          <View style={styles.loadingLocation}>
+          <View style={themeStyles.loadingLocation}>
             <ActivityIndicator size="large" color="#3F51B5" />
-            <Text style={styles.loadingLocationText}>
+            <Text style={themeStyles.loadingLocationText}>
               Obteniendo ubicación...
             </Text>
           </View>
         )}
 
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryTitle}>Resumen del reporte</Text>
+        <View style={themeStyles.summaryContainer}>
+          <Text style={themeStyles.summaryTitle}>Resumen del reporte</Text>
 
-          <View style={styles.summaryItem}>
+          <View style={themeStyles.summaryItem}>
             <Ionicons name="document-text-outline" size={20} color="#555" />
-            <Text style={styles.summaryLabel}>Descripción:</Text>
+            <Text style={themeStyles.summaryLabel}>Descripción:</Text>
             <Text
-              style={styles.summaryValue}
+              style={themeStyles.summaryValue}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -438,40 +835,40 @@ export default function ReportScreen() {
             </Text>
           </View>
 
-          <View style={styles.summaryItem}>
+          <View style={themeStyles.summaryItem}>
             <Ionicons name="images-outline" size={20} color="#555" />
-            <Text style={styles.summaryLabel}>Imágenes:</Text>
-            <Text style={styles.summaryValue}>
+            <Text style={themeStyles.summaryLabel}>Imágenes:</Text>
+            <Text style={themeStyles.summaryValue}>
               {imagenes.length} seleccionada(s)
             </Text>
           </View>
 
-          <View style={styles.summaryItem}>
+          <View style={themeStyles.summaryItem}>
             <Ionicons name="location-outline" size={20} color="#555" />
-            <Text style={styles.summaryLabel}>Ubicación:</Text>
-            <Text style={styles.summaryValue}>
+            <Text style={themeStyles.summaryLabel}>Ubicación:</Text>
+            <Text style={themeStyles.summaryValue}>
               {ubicacion ? "Detectada correctamente" : "Pendiente..."}
             </Text>
           </View>
         </View>
 
-        <View style={styles.navigationButtons}>
+        <View style={themeStyles.navigationButtons}>
           <TouchableOpacity
-            style={styles.backButton}
+            style={themeStyles.backButton}
             onPress={() => setStep(2)}
           >
             <Ionicons name="arrow-back" size={20} color="#3F51B5" />
-            <Text style={styles.backButtonText}>Atrás</Text>
+            <Text style={themeStyles.backButtonText}>Atrás</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.submitButton,
+              themeStyles.submitButton,
               (!descripcion ||
                 !ubicacion ||
                 imagenes.length === 0 ||
                 cargando) &&
-                styles.disabledButton,
+              themeStyles.disabledButton,
             ]}
             onPress={subirReporte}
             disabled={
@@ -482,7 +879,7 @@ export default function ReportScreen() {
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <>
-                <Text style={styles.submitButtonText}>Enviar reporte</Text>
+                <Text style={themeStyles.submitButtonText}>Enviar reporte</Text>
                 <Ionicons name="send" size={18} color="#FFF" />
               </>
             )}
@@ -506,24 +903,24 @@ export default function ReportScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={themeStyles.safeArea}>
+      <StatusBar barStyle={theme === "light" ? "dark-content" : "light-content"} />
 
       <KeyboardAvoidingView
-        style={styles.container}
+        style={themeStyles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
+        <View style={themeStyles.header}>
+          <View style={themeStyles.headerRow}>
             <TouchableOpacity
-              style={styles.headerBackButton}
+              style={themeStyles.headerBackButton}
               onPress={() => navigation.navigate("Home")}
             >
               <Ionicons name="arrow-back" size={28} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Nuevo Reporte</Text>
+            <Text style={themeStyles.headerTitle}>Nuevo Reporte</Text>
           </View>
-          <Text style={styles.headerSubtitle}>
+          <Text style={themeStyles.headerSubtitle}>
             Ayuda a mejorar la seguridad de tu comunidad
           </Text>
         </View>
@@ -531,7 +928,7 @@ export default function ReportScreen() {
         {renderStepIndicator()}
 
         <ScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={themeStyles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -545,9 +942,9 @@ export default function ReportScreen() {
           animationType="fade"
           onRequestClose={() => setImagenSeleccionada(null)}
         >
-          <View style={styles.modalContainer}>
+          <View style={themeStyles.modalContainer}>
             <TouchableOpacity
-              style={styles.closeModalButton}
+              style={themeStyles.closeModalButton}
               onPress={() => setImagenSeleccionada(null)}
             >
               <Ionicons name="close" size={28} color="#FFF" />
@@ -555,7 +952,7 @@ export default function ReportScreen() {
 
             <Image
               source={{ uri: imagenSeleccionada }}
-              style={styles.modalImage}
+              style={themeStyles.modalImage}
               resizeMode="contain"
             />
           </View>
@@ -565,14 +962,21 @@ export default function ReportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
+  ...styles,
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  ...styles,
   safeArea: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#000",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#000",
   },
   header: {
     backgroundColor: "#0F172A",
@@ -586,193 +990,50 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
-    // alignItems: "center", // Elimina esto para usar headerRow
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 2,
-  },
-  headerBackButton: {
-    marginRight: 10,
-    padding: 4,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#fff",
     textAlign: "left",
     flex: 1,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(255,255,255,0.8)",
     marginTop: 4,
     textAlign: "left",
-  },
-  stepIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 8,
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E2E8F0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  activeStepCircle: {
-    backgroundColor: "#3B82F6",
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#334155",
-  },
-  activeStepNumber: {
-    color: "#FFFFFF",
-  },
-  stepText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#64748B",
-    marginLeft: 4,
-  },
-  activeStepText: {
-    color: "#3B82F6",
-  },
-  stepLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: "#E2E8F0",
-    marginHorizontal: 8,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  stepContainer: {
-    flex: 1,
-  },
-  inputContainer: {
-    marginBottom: 24,
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1E293B",
+    color: "#fff",
     marginBottom: 12,
   },
   textArea: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#222",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#333",
     padding: 16,
     fontSize: 16,
-    color: "#1E293B",
+    color: "#fff",
     minHeight: 120,
     textAlignVertical: "top",
-  },
-  buttonContainer: {
-    alignItems: "flex-end",
-    marginTop: 16,
-  },
-  nextButton: {
-    backgroundColor: "#3B82F6",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  nextButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 8,
-  },
-  disabledButton: {
-    backgroundColor: "#CBD5E1",
-    shadowOpacity: 0,
-    elevation: 0,
   },
   mediaTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1E293B",
+    color: "#fff",
     marginBottom: 16,
-  },
-  mediaButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 24,
-  },
-  mediaButton: {
-    backgroundColor: "#2563EB",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    width: width * 0.4,
-    height: 100,
-    borderRadius: 12,
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  mediaButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 8,
-  },
-  imagesContainer: {
-    marginBottom: 24,
   },
   imagesCount: {
     fontSize: 14,
-    color: "#334155",
+    color: "#bbb",
     marginBottom: 12,
   },
-  imagesScroll: {
-    paddingRight: 16,
-  },
-  imageWrapper: {
-    marginRight: 12,
-    position: "relative",
-  },
-  thumbnailImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  deleteImageButton: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#EF4444",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   noImagesContainer: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#111",
     borderRadius: 12,
     padding: 24,
     alignItems: "center",
@@ -781,13 +1042,8 @@ const styles = StyleSheet.create({
   },
   noImagesText: {
     fontSize: 16,
-    color: "#64748B",
+    color: "#bbb",
     marginTop: 12,
-  },
-  navigationButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 16,
   },
   backButton: {
     flexDirection: "row",
@@ -798,7 +1054,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#3B82F6",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#111",
   },
   backButtonText: {
     color: "#3B82F6",
@@ -809,11 +1065,11 @@ const styles = StyleSheet.create({
   locationTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1E293B",
+    color: "#fff",
     marginBottom: 16,
   },
   errorContainer: {
-    backgroundColor: "#FFEBEE",
+    backgroundColor: "#2d0707",
     borderRadius: 12,
     padding: 16,
     flexDirection: "column",
@@ -822,7 +1078,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: "#E53935",
+    color: "#FF6B6B",
     marginTop: 8,
     textAlign: "center",
   },
@@ -834,25 +1090,16 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   retryButtonText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 14,
     fontWeight: "600",
-  },
-  mapWrapper: {
-    height: 220,
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 24,
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
   },
   mapOverlay: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
@@ -862,24 +1109,24 @@ const styles = StyleSheet.create({
   },
   locationInfo: {
     fontSize: 14,
-    color: "#334155",
+    color: "#fff",
     marginLeft: 6,
   },
   loadingLocation: {
     height: 200,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#111",
     borderRadius: 12,
     marginBottom: 24,
   },
   loadingLocationText: {
     fontSize: 16,
-    color: "#64748B",
+    color: "#bbb",
     marginTop: 12,
   },
   summaryContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#111",
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -892,67 +1139,19 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1E293B",
+    color: "#fff",
     marginBottom: 12,
-  },
-  summaryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#334155",
+    color: "#bbb",
     fontWeight: "600",
     marginLeft: 8,
     marginRight: 4,
   },
   summaryValue: {
     fontSize: 14,
-    color: "#1E293B",
+    color: "#fff",
     flex: 1,
-  },
-  submitButton: {
-    backgroundColor: "#10B981",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalImage: {
-    width: width * 0.9,
-    height: width * 0.9,
-    borderRadius: 8,
-  },
-  closeModalButton: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 10,
   },
 });

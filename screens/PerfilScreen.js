@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { auth } from "../src/config/firebaseConfig";
 import { signOut } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
+import { ThemeContext } from "../src/context/ThemeContext";
 
 const PerfilScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -31,7 +32,14 @@ const PerfilScreen = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const db = getFirestore();
+
+  // Contexto de tema global
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
+  // Selecciona los estilos según el tema
+  const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -168,16 +176,29 @@ const PerfilScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={themeStyles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={themeStyles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={themeStyles.backButton}
         >
-          <FontAwesome5 name="arrow-left" size={20} color="#334155" />
+          <FontAwesome5
+            name="arrow-left"
+            size={20}
+            color={theme === "light" ? "#334155" : "#fff"}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mi Perfil</Text>
+        <Text style={themeStyles.headerTitle}>Mi Perfil</Text>
+        {/* Botón para cambiar tema */}
+        <TouchableOpacity onPress={toggleTheme}>
+          <FontAwesome5
+            name={theme === "light" ? "moon" : "sun"}
+            size={20}
+            color={theme === "light" ? "#334155" : "#fff"}
+            style={{ marginLeft: 15 }}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Modal foto */}
@@ -187,46 +208,56 @@ const PerfilScreen = ({ navigation }) => {
         visible={photoModalVisible}
         onRequestClose={() => setPhotoModalVisible(false)}
       >
-        <View style={styles.modalBackground}>
-          <View style={styles.photoModalContainer}>
-            <Text style={styles.modalTitle}>Cambiar Foto de Perfil</Text>
+        <View style={themeStyles.modalBackground}>
+          <View style={themeStyles.photoModalContainer}>
+            <Text style={themeStyles.modalTitle}>Cambiar Foto de Perfil</Text>
 
-            <TouchableOpacity style={styles.photoOption} onPress={takePhoto}>
+            <TouchableOpacity
+              style={themeStyles.photoOption}
+              onPress={takePhoto}
+            >
               <FontAwesome5 name="camera" size={24} color="#2563eb" />
-              <Text style={styles.photoOptionText}>Tomar foto</Text>
+              <Text style={themeStyles.photoOptionText}>Tomar foto</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.photoOption} onPress={pickImage}>
+            <TouchableOpacity
+              style={themeStyles.photoOption}
+              onPress={pickImage}
+            >
               <FontAwesome5 name="image" size={24} color="#2563eb" />
-              <Text style={styles.photoOptionText}>Elegir de la galería</Text>
+              <Text style={themeStyles.photoOptionText}>Elegir de la galería</Text>
             </TouchableOpacity>
 
             <TouchableHighlight
-              style={styles.cancelButton}
+              style={themeStyles.cancelButton}
               onPress={() => setPhotoModalVisible(false)}
             >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
+              <Text style={themeStyles.cancelButtonText}>Cancelar</Text>
             </TouchableHighlight>
           </View>
         </View>
       </Modal>
 
       {/* Foto de perfil */}
-      <View style={styles.profileContainer}>
+      <View style={themeStyles.profileContainer}>
         <TouchableOpacity onPress={() => setPhotoModalVisible(true)}>
           {uploadingPhoto ? (
-            <View style={styles.loadingImageContainer}>
+            <View style={themeStyles.loadingImageContainer}>
               <ActivityIndicator size="large" color="#2563eb" />
             </View>
           ) : userInfo.photoURL ? (
             <Image
               source={{ uri: userInfo.photoURL }}
-              style={styles.profileImage}
+              style={themeStyles.profileImage}
             />
           ) : (
-            <FontAwesome5 name="user-circle" size={100} color="#aaa" />
+            <FontAwesome5
+              name="user-circle"
+              size={100}
+              color={theme === "light" ? "#aaa" : "#444"}
+            />
           )}
-          <View style={styles.cameraIconOverlay}>
+          <View style={themeStyles.cameraIconOverlay}>
             <FontAwesome5 name="camera" size={16} color="#fff" />
           </View>
         </TouchableOpacity>
@@ -234,34 +265,36 @@ const PerfilScreen = ({ navigation }) => {
           onPress={() => setPhotoModalVisible(true)}
           disabled={uploadingPhoto}
         >
-          <Text style={styles.changePhotoText}>
+          <Text style={themeStyles.changePhotoText}>
             {uploadingPhoto ? "Subiendo..." : "Cambiar foto"}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Información */}
-      <View style={styles.infoContainer}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Nombre completo</Text>
+      <View style={themeStyles.infoContainer}>
+        <View style={themeStyles.infoItem}>
+          <Text style={themeStyles.infoLabel}>Nombre completo</Text>
           {isEditing ? (
             <>
               <TextInput
-                style={styles.input}
+                style={themeStyles.input}
                 value={editedFirstName}
                 onChangeText={setEditedFirstName}
                 placeholder="Nombre"
+                placeholderTextColor={theme === "light" ? "#aaa" : "#888"}
                 autoFocus
               />
               <TextInput
-                style={styles.input}
+                style={themeStyles.input}
                 value={editedLastName}
                 onChangeText={setEditedLastName}
                 placeholder="Apellido"
+                placeholderTextColor={theme === "light" ? "#aaa" : "#888"}
               />
             </>
           ) : (
-            <Text style={styles.infoValue}>
+            <Text style={themeStyles.infoValue}>
               {userInfo.firstName && userInfo.lastName
                 ? `${userInfo.firstName} ${userInfo.lastName}`
                 : "Nombre no disponible"}
@@ -269,65 +302,66 @@ const PerfilScreen = ({ navigation }) => {
           )}
         </View>
 
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Correo electrónico</Text>
-          <Text style={styles.infoValue}>
+        <View style={themeStyles.infoItem}>
+          <Text style={themeStyles.infoLabel}>Correo electrónico</Text>
+          <Text style={themeStyles.infoValue}>
             {userInfo.email || "No disponible"}
           </Text>
         </View>
 
         {userInfo.role?.trim().toLowerCase() === "admin" && (
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Rol</Text>
-            <Text style={styles.infoValue}>{userInfo.role}</Text>
+          <View style={themeStyles.infoItem}>
+            <Text style={themeStyles.infoLabel}>Rol</Text>
+            <Text style={themeStyles.infoValue}>{userInfo.role}</Text>
           </View>
         )}
       </View>
 
       {/* Botones de acción */}
       <TouchableOpacity
-        style={styles.editProfileButton}
+        style={themeStyles.editProfileButton}
         onPress={() => (isEditing ? handleSaveChanges() : setIsEditing(true))}
       >
         <FontAwesome5
           name={isEditing ? "save" : "user-edit"}
           size={16}
           color="#fff"
-          style={styles.buttonIcon}
+          style={themeStyles.buttonIcon}
         />
-        <Text style={styles.buttonText}>
+        <Text style={themeStyles.buttonText}>
           {isEditing ? "Guardar cambios" : "Editar información"}
         </Text>
       </TouchableOpacity>
 
       {/* Botón Cambiar contraseña */}
       <TouchableOpacity
-        style={styles.editProfileButton}
+        style={themeStyles.editProfileButton}
         onPress={() => navigation.navigate("ChangePassword")}
       >
         <FontAwesome5
           name="lock"
           size={16}
           color="#fff"
-          style={styles.buttonIcon}
+          style={themeStyles.buttonIcon}
         />
-        <Text style={styles.buttonText}>Cambiar contraseña</Text>
+        <Text style={themeStyles.buttonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <TouchableOpacity style={themeStyles.logoutButton} onPress={handleLogout}>
         <FontAwesome5
           name="sign-out-alt"
           size={16}
           color="#fff"
-          style={styles.buttonIcon}
+          style={themeStyles.buttonIcon}
         />
-        <Text style={styles.buttonText}>Cerrar sesión</Text>
+        <Text style={themeStyles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
+// Estilos para tema claro
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8fafc" },
   header: {
     flexDirection: "row",
@@ -338,6 +372,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
+    justifyContent: "space-between",
   },
   backButton: { marginRight: 15 },
   headerTitle: { fontSize: 22, fontWeight: "bold", color: "#334155" },
@@ -354,7 +389,7 @@ const styles = StyleSheet.create({
     width: "80%",
     alignItems: "center",
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#222" },
   photoOption: {
     flexDirection: "row",
     alignItems: "center",
@@ -409,6 +444,115 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#fff",
     color: "#334155",
+  },
+  editProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2563eb",
+    paddingVertical: 12,
+    marginHorizontal: 40,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  buttonIcon: { marginRight: 8 },
+  buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ef4444",
+    paddingVertical: 12,
+    marginHorizontal: 40,
+    borderRadius: 8,
+    marginBottom: 30,
+  },
+});
+
+// Estilos para tema oscuro
+const darkStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#000" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+    backgroundColor: "#111",
+    borderBottomWidth: 1,
+    borderBottomColor: "#222",
+    justifyContent: "space-between",
+  },
+  backButton: { marginRight: 15 },
+  headerTitle: { fontSize: 22, fontWeight: "bold", color: "#fff" },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  photoModalContainer: {
+    backgroundColor: "#222",
+    borderRadius: 12,
+    padding: 25,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#fff" },
+  photoOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  photoOptionText: { fontSize: 16, color: "#fff", marginLeft: 15 },
+  cancelButton: {
+    marginTop: 15,
+    backgroundColor: "#333",
+    padding: 10,
+    borderRadius: 5,
+  },
+  cancelButtonText: { color: "#fff", fontWeight: "bold" },
+  profileContainer: { alignItems: "center", marginVertical: 20 },
+  profileImage: { width: 120, height: 120, borderRadius: 60 },
+  loadingImageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#222",
+  },
+  cameraIconOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#2563eb",
+    borderRadius: 20,
+    padding: 6,
+  },
+  changePhotoText: { color: "#2563eb", fontWeight: "bold", marginTop: 10 },
+  infoContainer: { paddingHorizontal: 20, marginBottom: 20 },
+  infoItem: { marginBottom: 20 },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#bbb",
+    marginBottom: 6,
+  },
+  infoValue: { fontSize: 18, color: "#fff" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#444",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    marginBottom: 10,
+    backgroundColor: "#111",
+    color: "#fff",
   },
   editProfileButton: {
     flexDirection: "row",
