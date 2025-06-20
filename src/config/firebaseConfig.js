@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import { Alert } from "react-native";
 
-// Configuración de Firebase
+
 const firebaseConfig = {
   apiKey: "AIzaSyChtka2Wkc9cKaTfl4nDm3Cd4CN9hqhFDA",
   authDomain: "proyecto-d8a81.firebaseapp.com",
@@ -30,7 +30,7 @@ const firebaseConfig = {
   measurementId: "G-H5M9B9JC7R",
 };
 
-// Inicializar Firebase
+
 const app = initializeApp(firebaseConfig);
 
 // Inicializar Auth con persistencia para React Native

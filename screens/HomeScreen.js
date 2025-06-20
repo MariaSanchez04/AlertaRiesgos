@@ -618,8 +618,12 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={themeStyles.actionCardsContainer}>
           <Text style={themeStyles.sectionTitle}>Acciones rápidas</Text>
-
-          <View style={themeStyles.actionCards}>
+          <View
+            style={[
+              themeStyles.actionCards,
+              userInfo.role === "admin" && { marginTop: 16 }, // Ya tienes este margen
+            ]}
+          >
             <TouchableOpacity
               style={themeStyles.actionCard}
               onPress={() => navigation.navigate("Takephoto")}
@@ -633,7 +637,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={themeStyles.actionCard}
+              style={[themeStyles.actionCard, userInfo.role === "admin" && { marginTop: 16 }]} // <-- Agrega este margen solo a Panel Admin y Políticas
               onPress={() => navigation.navigate("Reportes")}
             >
               <View
@@ -646,7 +650,7 @@ const HomeScreen = ({ navigation }) => {
 
             {userInfo.role === "admin" && (
               <TouchableOpacity
-                style={themeStyles.actionCard}
+                style={[themeStyles.actionCard, { marginTop: 16 }]} // <-- Margen superior solo para admin
                 onPress={() => navigation.navigate("AdminScreen")}
               >
                 <View
@@ -657,6 +661,21 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={themeStyles.actionCardText}>Panel Admin</Text>
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity
+              style={[
+                themeStyles.actionCard,
+                userInfo.role === "admin" && { marginTop: 16 }, // <-- Margen superior solo si es admin
+              ]}
+              onPress={() => navigation.navigate("Politicas")}
+            >
+              <View
+                style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+              >
+                <FontAwesome5 name="file-alt" size={22} color="#fff" />
+              </View>
+              <Text style={themeStyles.actionCardText}>Políticas</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

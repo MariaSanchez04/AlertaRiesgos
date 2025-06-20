@@ -13,6 +13,7 @@ import AdminScreen from "./screens/AdminScreen";
 import PerfilScreen from "./screens/PerfilScreen";
 import ForgotPasswordScreen from "./screens/ForgotPassword";
 import ChangePasswordScreen from "./screens/ChangePassword";
+import PoliticasScreen from "./screens/PoliticasScreen"; // Agrega esta línea
 
 const Stack = createStackNavigator();
 
@@ -89,6 +90,13 @@ export default function App() {
           name="Perfil"
           component={PerfilScreen}
           options={{ title: "Perfil del usuario", headerShown: false }}
+        />
+
+        {/* Políticas */}
+        <Stack.Screen
+          name="Politicas"
+          component={PoliticasScreen}
+          options={{ title: "Políticas", headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

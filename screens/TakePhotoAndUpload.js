@@ -415,7 +415,7 @@ export default function ReportScreen() {
   const [cargando, setCargando] = useState(false);
   const [ubicacionError, setUbicacionError] = useState(null);
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
-  const [step, setStep] = useState(1); // Para el flujo de pasos: 1=Descripción, 2=Imágenes, 3=Ubicación
+  const [step, setStep] = useState(1);
 
   const navigation = useNavigation();
 
