@@ -37,7 +37,6 @@ import { ThemeContext } from "../src/context/ThemeContext"; // Importa el contex
 
 const { width } = Dimensions.get("window");
 
-// Estilos base para ambos temas
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -86,16 +85,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 20,
+    marginVertical: 12,
+    paddingHorizontal: 0,
+    flexWrap: 'nowrap',
   },
   stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: "#E5E7EB",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   activeStepCircle: {
     backgroundColor: "#3B82F6",
@@ -103,25 +104,26 @@ const styles = StyleSheet.create({
   stepNumber: {
     color: "#64748B",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
   activeStepNumber: {
     color: "#fff",
   },
   stepText: {
-    marginLeft: 8,
+    marginLeft: 4,
     color: "#64748B",
     fontWeight: "600",
-    fontSize: 15,
+    fontSize: 13,
+    flexShrink: 1,
   },
   activeStepText: {
     color: "#3B82F6",
   },
   stepLine: {
-    width: 30,
+    width: 18,
     height: 2,
     backgroundColor: "#E5E7EB",
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   stepContainer: {
     marginBottom: 24,
@@ -380,6 +382,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#1E293B",
     flex: 1,
+    flexWrap: "wrap",
   },
   scrollContainer: {
     padding: 20,
@@ -419,7 +422,6 @@ export default function ReportScreen() {
 
   const navigation = useNavigation();
 
-  // Contexto de tema global
   const { theme } = useContext(ThemeContext);
   const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
@@ -827,11 +829,10 @@ export default function ReportScreen() {
             <Text style={themeStyles.summaryLabel}>Descripción:</Text>
             <Text
               style={themeStyles.summaryValue}
-              numberOfLines={1}
+              numberOfLines={3} // Permite hasta 3 líneas, puedes ajustar
               ellipsizeMode="tail"
             >
-              {descripcion.substring(0, 40)}
-              {descripcion.length > 40 ? "..." : ""}
+              {descripcion}
             </Text>
           </View>
 
