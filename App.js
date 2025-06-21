@@ -14,6 +14,7 @@ import PerfilScreen from "./screens/PerfilScreen";
 import ForgotPasswordScreen from "./screens/ForgotPassword";
 import ChangePasswordScreen from "./screens/ChangePassword";
 import PoliticasScreen from "./screens/PoliticasScreen"; // Agrega esta línea
+import EmergenciaScreen from "./screens/EmergenciaScreen";
 
 const Stack = createStackNavigator();
 
@@ -97,6 +98,13 @@ export default function App() {
           name="Politicas"
           component={PoliticasScreen}
           options={{ title: "Políticas", headerShown: false }}
+        />
+
+        {/* Pantalla de emergencia */}
+        <Stack.Screen
+          name="EmergenciaScreen"
+          component={EmergenciaScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

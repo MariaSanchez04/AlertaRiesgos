@@ -1,8 +1,7 @@
 import React, { useContext } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemeContext } from "../src/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function PoliticasScreen({ navigation }) {
   const { theme } = useContext(ThemeContext);
@@ -21,77 +20,33 @@ export default function PoliticasScreen({ navigation }) {
             color={theme === "light" ? "#1E293B" : "#fff"}
           />
         </TouchableOpacity>
-        <Text style={themeStyles.headerTitle}>Políticas e Información</Text>
+        <Text style={themeStyles.headerTitle}>Políticas</Text>
       </View>
       <Text style={themeStyles.text}>
-        Este es un texto de prueba para la pantalla de Políticas e Información de
-        la aplicación.
+        Aquí encontrarás las políticas y la información relevante de la aplicación.
       </Text>
-
-      {/* Números de emergencia */}
-      <View style={{ marginTop: 32 }}>
-        <Text
-          style={[themeStyles.text, { fontWeight: "bold", marginBottom: 8 }]}
-        >
-          Números de emergencia (Colombia):
+      <Text style={[themeStyles.text, { marginTop: 24, fontWeight: "bold" }]}>
+        Recomendaciones de uso:
+      </Text>
+      <View style={{ marginTop: 10 }}>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • Utiliza la app solo para reportar incidentes reales.
         </Text>
-        <TouchableOpacity
-          style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
-        >
-          <FontAwesome5
-            name="shield-alt"
-            size={20}
-            color="#2563EB"
-            style={{ marginRight: 10 }}
-          />
-          <Text
-            style={[
-              themeStyles.text,
-              { color: "#2563EB", textAlign: "left", marginTop: 0 },
-            ]}
-          >
-            Policía Nacional: 313 498 1179
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
-        >
-          <FontAwesome5
-            name="fire-extinguisher"
-            size={20}
-            color="#EF4444"
-            style={{ marginRight: 10 }}
-          />
-          <Text
-            style={[
-              themeStyles.text,
-              { color: "#EF4444", textAlign: "left", marginTop: 0 },
-            ]}
-          >
-            Bomberos: 313 498 1179
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
-        >
-          <FontAwesome5
-            name="ambulance"
-            size={20}
-            color="#10B981"
-            style={{ marginRight: 10 }}
-          />
-          <Text
-            style={[
-              themeStyles.text,
-              { color: "#10B981", textAlign: "left", marginTop: 0 },
-            ]}
-          >
-            Ambulancia: 313 498 1179
-          </Text>
-        </TouchableOpacity>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • No compartas información falsa o engañosa.
+        </Text>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • Respeta la privacidad de otras personas al tomar fotos o reportar.
+        </Text>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • En caso de emergencia, comunícate también con las autoridades locales.
+        </Text>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • En caso de un mal uso de la aplicación, se tomarán las medidas necesarias.
+        </Text>
+        <Text style={[themeStyles.text, { textAlign: "left" }]}>
+          • Medidas como bloquear su cuenta o eliminar su cuenta.
+        </Text>
       </View>
     </View>
   );
@@ -124,12 +79,6 @@ const stylesLight = StyleSheet.create({
     textAlign: "center",
     marginTop: 16,
   },
-  emergencyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    marginLeft: 10,
-  },
 });
 
 const stylesDark = StyleSheet.create({
@@ -158,11 +107,5 @@ const stylesDark = StyleSheet.create({
     color: "#bbb",
     textAlign: "center",
     marginTop: 16,
-  },
-  emergencyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    marginLeft: 10,
   },
 });

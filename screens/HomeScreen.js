@@ -621,11 +621,14 @@ const HomeScreen = ({ navigation }) => {
           <View
             style={[
               themeStyles.actionCards,
-              userInfo.role === "admin" && { marginTop: 16 }, // Ya tienes este margen
+              userInfo.role === "admin" && { marginTop: 16 },
             ]}
           >
             <TouchableOpacity
-              style={themeStyles.actionCard}
+              style={[
+                themeStyles.actionCard,
+                // Elimina minHeight aquí para que todas las cards usen solo el estilo base
+              ]}
               onPress={() => navigation.navigate("Takephoto")}
             >
               <View
@@ -637,7 +640,10 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[themeStyles.actionCard, userInfo.role === "admin" && { marginTop: 16 }]} // <-- Agrega este margen solo a Panel Admin y Políticas
+              style={[
+                themeStyles.actionCard,
+                userInfo.role === "admin" && { marginTop: 16 }
+              ]}
               onPress={() => navigation.navigate("Reportes")}
             >
               <View
@@ -650,7 +656,10 @@ const HomeScreen = ({ navigation }) => {
 
             {userInfo.role === "admin" && (
               <TouchableOpacity
-                style={[themeStyles.actionCard, { marginTop: 16 }]} // <-- Margen superior solo para admin
+                style={[
+                  themeStyles.actionCard,
+                  { marginTop: 16 }
+                ]}
                 onPress={() => navigation.navigate("AdminScreen")}
               >
                 <View
@@ -662,20 +671,92 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              style={[
-                themeStyles.actionCard,
-                userInfo.role === "admin" && { marginTop: 16 }, // <-- Margen superior solo si es admin
-              ]}
-              onPress={() => navigation.navigate("Politicas")}
-            >
+            {/* Políticas y Emergencia juntos para admin */}
+            {userInfo.role === "admin" ? (
               <View
-                style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+                style={{
+                  flexDirection: "row",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "stretch",
+                  marginTop: 16,
+                  gap: 12,
+                }}
               >
-                <FontAwesome5 name="file-alt" size={22} color="#fff" />
+                <TouchableOpacity
+                  style={[themeStyles.actionCard, { flex: 1, margin: 0 }]}
+                  onPress={() => navigation.navigate("Politicas")}
+                >
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}>
+                    <FontAwesome5 name="file-alt" size={22} color="#fff" />
+                  </View>
+                  <Text style={themeStyles.actionCardText}>Políticas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    themeStyles.actionCard,
+                    { flex: 1, margin: 0, marginLeft: 32 } // <-- Separa Emergencia de las otras cards
+                  ]}
+                  onPress={() => navigation.navigate("EmergenciaScreen")}
+                >
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}>
+                    <FontAwesome5 name="phone-alt" size={22} color="#fff" />
+                  </View>
+                  <Text
+                    style={[
+                      themeStyles.actionCardText,
+                      { width: "100%", textAlign: "center", fontSize: 15 }
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={false}
+                    ellipsizeMode="tail"
+                  >
+                    Emergencia
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <Text style={themeStyles.actionCardText}>Políticas</Text>
-            </TouchableOpacity>
+            ) : (
+              // El resto del código para usuarios normales
+              <>
+                <TouchableOpacity
+                  style={[
+                    themeStyles.actionCard,
+                    { marginTop: 8 }, // Mantén solo el marginTop
+                    // Elimina height: undefined o cualquier height aquí
+                  ]}
+                  onPress={() => navigation.navigate("Politicas")}
+                >
+                  <View
+                    style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+                  >
+                    <FontAwesome5 name="file-alt" size={22} color="#fff" />
+                  </View>
+                  <Text style={themeStyles.actionCardText}>Políticas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    themeStyles.actionCard,
+                    { marginTop: 16 } // <-- Menos separación entre Políticas y Emergencia
+                  ]}
+                  onPress={() => navigation.navigate("EmergenciaScreen")}
+                >
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}>
+                    <FontAwesome5 name="phone-alt" size={22} color="#fff" />
+                  </View>
+                  <Text
+                    style={[
+                      themeStyles.actionCardText,
+                      { width: "100%", textAlign: "center", fontSize: 15 }
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={false}
+                    ellipsizeMode="tail"
+                  >
+                    Emergencia
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
 
@@ -1578,17 +1659,6 @@ const darkStyles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: "#222", // Fondo oscuro para los items
-    borderRadius: 20,
-    marginHorizontal: 6,
-    marginVertical: 4,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  filtroItemSelected: {
-    backgroundColor: "#2563EB",
-    borderColor: "#1E40AF",
-  },
-  filtroItemText: {
     color: "#bbb", // Texto claro
     fontWeight: "500",
   },
