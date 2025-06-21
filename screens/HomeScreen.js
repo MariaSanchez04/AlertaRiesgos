@@ -591,154 +591,145 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      <View style={themeStyles.content}>
-        <Animated.View style={[themeStyles.welcomeCard, { opacity: fadeAnim }]}>
-          <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
-            style={themeStyles.welcomeGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <View style={themeStyles.welcomeContent}>
-              <FontAwesome5
-                name="shield-alt"
-                size={28}
-                color="#FFFFFF"
-                style={themeStyles.welcomeIcon}
-              />
-              <View>
-                <Text style={themeStyles.welcomeText}>Seguridad Ciudadana</Text>
-                <Text style={themeStyles.welcomeSubtext}>
-                  Reporta incidentes en tu zona
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
-
-        <View style={themeStyles.actionCardsContainer}>
-          <Text style={themeStyles.sectionTitle}>Acciones rápidas</Text>
-          <View
-            style={[
-              themeStyles.actionCards,
-              userInfo.role === "admin" && { marginTop: 16 }, // Ya tienes este margen
-            ]}
-          >
-            <TouchableOpacity
-              style={themeStyles.actionCard}
-              onPress={() => navigation.navigate("Takephoto")}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={themeStyles.content}>
+          <Animated.View style={[themeStyles.welcomeCard, { opacity: fadeAnim }]}>
+            <LinearGradient
+              colors={["#3B82F6", "#2563EB"]}
+              style={themeStyles.welcomeGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
-              <View
-                style={[themeStyles.actionIconBg, { backgroundColor: "#EF4444" }]}
-              >
-                <FontAwesome5 name="camera" size={22} color="#fff" />
+              <View style={themeStyles.welcomeContent}>
+                <FontAwesome5
+                  name="shield-alt"
+                  size={28}
+                  color="#FFFFFF"
+                  style={themeStyles.welcomeIcon}
+                />
+                <View>
+                  <Text style={themeStyles.welcomeText}>Seguridad Ciudadana</Text>
+                  <Text style={themeStyles.welcomeSubtext}>
+                    Reporta incidentes en tu zona
+                  </Text>
+                </View>
               </View>
-              <Text style={themeStyles.actionCardText}>Nuevo Reporte</Text>
-            </TouchableOpacity>
+            </LinearGradient>
+          </Animated.View>
 
-            <TouchableOpacity
-              style={[themeStyles.actionCard, userInfo.role === "admin" && { marginTop: 16 }]} // <-- Agrega este margen solo a Panel Admin y Políticas
-              onPress={() => navigation.navigate("Reportes")}
+          <View style={themeStyles.actionCardsContainer}>
+            <Text style={themeStyles.sectionTitle}>Acciones rápidas</Text>
+            <View
+              style={[
+                themeStyles.actionCards,
+                userInfo.role === "admin" && { marginTop: 16 }, // Ya tienes este margen
+              ]}
             >
-              <View
-                style={[themeStyles.actionIconBg, { backgroundColor: "#10B981" }]}
-              >
-                <FontAwesome5 name="clipboard-list" size={22} color="#fff" />
-              </View>
-              <Text style={themeStyles.actionCardText}>Reportes</Text>
-            </TouchableOpacity>
-
-            {userInfo.role === "admin" && (
               <TouchableOpacity
-                style={[themeStyles.actionCard, { marginTop: 16 }]} // <-- Margen superior solo para admin
-                onPress={() => navigation.navigate("AdminScreen")}
+                style={themeStyles.actionCard}
+                onPress={() => navigation.navigate("Takephoto")}
               >
                 <View
-                  style={[themeStyles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
+                  style={[themeStyles.actionIconBg, { backgroundColor: "#EF4444" }]}
                 >
-                  <FontAwesome5 name="user-shield" size={22} color="#fff" />
+                  <FontAwesome5 name="camera" size={22} color="#fff" />
                 </View>
-                <Text style={themeStyles.actionCardText}>Panel Admin</Text>
+                <Text style={themeStyles.actionCardText}>Nuevo Reporte</Text>
               </TouchableOpacity>
-            )}
 
-            <TouchableOpacity
-              style={[
-                themeStyles.actionCard,
-                userInfo.role === "admin" && { marginTop: 16 }, // <-- Margen superior solo si es admin
-              ]}
-              onPress={() => navigation.navigate("Politicas")}
-            >
-              <View
-                style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+              <TouchableOpacity
+                style={[themeStyles.actionCard, userInfo.role === "admin" && { marginTop: 16 }]} // <-- Agrega este margen solo a Panel Admin y Políticas
+                onPress={() => navigation.navigate("Reportes")}
               >
-                <FontAwesome5 name="file-alt" size={22} color="#fff" />
-              </View>
-              <Text style={themeStyles.actionCardText}>Políticas</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+                <View
+                  style={[themeStyles.actionIconBg, { backgroundColor: "#10B981" }]}
+                >
+                  <FontAwesome5 name="clipboard-list" size={22} color="#fff" />
+                </View>
+                <Text style={themeStyles.actionCardText}>Reportes</Text>
+              </TouchableOpacity>
 
-        <View style={themeStyles.recentReportsContainer}>
-          <Text style={themeStyles.sectionTitle}>Reportes recientes</Text>
-
-          {reportes.length > 0 ? (
-            <FlatList
-              data={reportes.slice(0, 5)}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={themeStyles.recentReportsList}
-              renderItem={({ item }) => (
+              {userInfo.role === "admin" && (
                 <TouchableOpacity
-                  style={themeStyles.recentReportCard}
-                  onPress={() =>
-                    navigation.navigate("ReporteDetalle", { reportId: item.id })
-                  }
+                  style={[themeStyles.actionCard, { marginTop: 16 }]} // <-- Margen superior solo para admin
+                  onPress={() => navigation.navigate("AdminScreen")}
                 >
                   <View
-                    style={[
-                      themeStyles.reportTypeTag,
-                      { backgroundColor: getTipoColor(item.tipo || "General") },
-                    ]}
+                    style={[themeStyles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
                   >
-                    <FontAwesome5
-                      name={getTipoIcon(item.tipo || "General")}
-                      size={12}
-                      color="#fff"
-                    />
-                    <Text style={themeStyles.reportTypeText}>
-                      {item.tipo || "General"}
-                    </Text>
+                    <FontAwesome5 name="user-shield" size={22} color="#fff" />
                   </View>
-
-                  <Text style={themeStyles.recentReportTitle} numberOfLines={2}>
-                    {item.descripcion
-                      ? item.descripcion.substring(0, 60)
-                      : "Sin descripción"}
-                    {item.descripcion && item.descripcion.length > 60
-                      ? "..."
-                      : ""}
-                  </Text>
-
-                  <View style={themeStyles.recentReportFooter}>
-                    <Text style={themeStyles.recentReportTime}>
-                      {formatTimestamp(item.creadoEn)}
-                    </Text>
-                  </View>
+                  <Text style={themeStyles.actionCardText}>Panel Admin</Text>
                 </TouchableOpacity>
               )}
-            />
-          ) : (
-            <View style={themeStyles.emptyReportsContainer}>
-              <FontAwesome5 name="clipboard" size={40} color="#CBD5E1" />
-              <Text style={themeStyles.emptyReportsText}>
-                No hay reportes recientes
-              </Text>
+
+              <TouchableOpacity
+                style={[
+                  themeStyles.actionCard,
+                  userInfo.role === "admin" && { marginTop: 16 }, // <-- Margen superior solo si es admin
+                ]}
+                onPress={() => navigation.navigate("Politicas")}
+              >
+                <View
+                  style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+                >
+                  <FontAwesome5 name="file-alt" size={22} color="#fff" />
+                </View>
+                <Text style={themeStyles.actionCardText}>Políticas</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
+
+          <View style={themeStyles.recentReportsContainer}>
+            <Text style={themeStyles.sectionTitle}>Reportes recientes</Text>
+            {reportes.length > 0 ? (
+              <View style={themeStyles.recentReportsList}>
+                {reportes.slice(0, 5).map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={themeStyles.recentReportCard}
+                    onPress={() => navigation.navigate("ReporteDetalle", { reportId: item.id })}
+                  >
+                    <View
+                      style={[
+                        themeStyles.reportTypeTag,
+                        { backgroundColor: getTipoColor(item.tipo || "General") },
+                      ]}
+                    >
+                      <FontAwesome5
+                        name={getTipoIcon(item.tipo || "General")}
+                        size={12}
+                        color="#fff"
+                      />
+                      <Text style={themeStyles.reportTypeText}>
+                        {item.tipo || "General"}
+                      </Text>
+                    </View>
+                    <Text style={themeStyles.recentReportTitle} numberOfLines={2}>
+                      {item.descripcion
+                        ? item.descripcion.substring(0, 60)
+                        : "Sin descripción"}
+                      {item.descripcion && item.descripcion.length > 60 ? "..." : ""}
+                    </Text>
+                    <View style={themeStyles.recentReportFooter}>
+                      <Text style={themeStyles.recentReportTime}>
+                        {formatTimestamp(item.creadoEn)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={themeStyles.emptyReportsContainer}>
+                <FontAwesome5 name="clipboard" size={40} color="#CBD5E1" />
+                <Text style={themeStyles.emptyReportsText}>
+                  No hay reportes recientes
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -868,52 +859,66 @@ const lightStyles = StyleSheet.create({
   },
   actionCards: {
     flexDirection: "row",
-    justifyContent: "space-between",
     flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 0,
+    gap: 0,
   },
   actionCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    padding: 16,
-    width: "30%",
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    width: "48%",
+    minHeight: 120,
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    elevation: 2,
     shadowColor: "#475569",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
-    elevation: 2,
   },
   actionIconBg: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
+    marginBottom: 8,
   },
   actionCardText: {
-    fontSize: 13,
-    color: "#334155",
+    fontSize: 14,
     fontWeight: "600",
+    color: "#1E293B",
     textAlign: "center",
+    flexWrap: "wrap",
   },
   recentReportsContainer: {
     marginBottom: 20,
   },
   recentReportsList: {
-    paddingRight: 20,
+    flexDirection: "column",
+    alignItems: "stretch",
+    paddingRight: 0,
+    minHeight: 140,
+    gap: 0,
   },
   recentReportCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    padding: 16,
-    width: 230,
-    marginRight: 15,
+    padding: 12,
+    width: "100%",
+    minHeight: 100,
+    marginBottom: 14,
+    justifyContent: "space-between",
+    elevation: 2,
     shadowColor: "#475569",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
-    elevation: 2,
   },
   reportTypeTag: {
     flexDirection: "row",
@@ -931,10 +936,12 @@ const lightStyles = StyleSheet.create({
     marginLeft: 6,
   },
   recentReportTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#1E293B",
-    marginBottom: 12,
+    marginVertical: 4,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   recentReportFooter: {
     flexDirection: "row",
@@ -947,9 +954,9 @@ const lightStyles = StyleSheet.create({
     flex: 1,
   },
   recentReportTime: {
-    fontSize: 12,
-    color: "#94A3B8",
-    fontWeight: "500",
+    fontSize: 13,
+    color: "#64748B",
+    marginTop: 2,
   },
   emptyReportsContainer: {
     alignItems: "center",
@@ -1311,52 +1318,65 @@ const darkStyles = StyleSheet.create({
   },
   actionCards: {
     flexDirection: "row",
-    justifyContent: "space-between",
     flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 0,
+    gap: 0,
   },
   actionCard: {
     backgroundColor: "#181C23", // Más claro que #111, pero sigue siendo oscuro
     borderRadius: 16,
-    padding: 16,
-    width: "30%",
+    padding: 12,
+    width: "48%",
+    minHeight: 120,
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    elevation: 2,
     shadowColor: "#222",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.10, // Un poco más de sombra para resaltar
     shadowRadius: 8,
-    elevation: 3,
   },
   actionIconBg: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
+    marginBottom: 8,
   },
   actionCardText: {
-    fontSize: 13,
-    color: "#fff",
+    fontSize: 14,
     fontWeight: "600",
+    color: "#fff",
     textAlign: "center",
+    flexWrap: "wrap",
   },
   recentReportsContainer: {
     marginBottom: 20,
   },
   recentReportsList: {
-    paddingRight: 20,
+    flexDirection: "column",
+    alignItems: "stretch",
+    paddingRight: 0,
+    minHeight: 140,
+    gap: 0,
   },
   recentReportCard: {
     backgroundColor: "#181C23", // Igual que actionCard para coherencia
     borderRadius: 16,
-    padding: 16,
-    width: 230,
-    marginRight: 15,
+    padding: 12,
+    width: "100%",
+    minHeight: 100,
+    marginBottom: 14,
+    justifyContent: "space-between",
+    elevation: 2,
     shadowColor: "#222",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.10,
     shadowRadius: 8,
-    elevation: 3,
   },
   reportTypeTag: {
     flexDirection: "row",
@@ -1374,10 +1394,12 @@ const darkStyles = StyleSheet.create({
     marginLeft: 6,
   },
   recentReportTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    marginBottom: 12,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1E293B",
+    marginVertical: 4,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   recentReportFooter: {
     flexDirection: "row",
@@ -1390,9 +1412,9 @@ const darkStyles = StyleSheet.create({
     flex: 1,
   },
   recentReportTime: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#bbb",
-    fontWeight: "500",
+    marginTop: 2,
   },
   emptyReportsContainer: {
     alignItems: "center",
