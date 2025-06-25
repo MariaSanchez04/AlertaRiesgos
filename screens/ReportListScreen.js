@@ -281,13 +281,15 @@ export default function ReportListScreen() {
 
               {/* Botones de acción */}
               <View style={themeStyles.actionRow}>
-                <TouchableOpacity
-                  style={themeStyles.editButton}
-                  onPress={() => openEditModal(item)}
-                >
-                  <Ionicons name="create-outline" size={18} color="#2563EB" />
-                  <Text style={themeStyles.editButtonText}>Editar</Text>
-                </TouchableOpacity>
+                {(userRole === "admin" || item.correoUsuario === auth.currentUser.email) && (
+                  <TouchableOpacity
+                    style={themeStyles.editButton}
+                    onPress={() => openEditModal(item)}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#2563EB" />
+                    <Text style={themeStyles.editButtonText}>Editar</Text>
+                  </TouchableOpacity>
+                )}
                 {userRole === "admin" && (
                   <TouchableOpacity
                     style={themeStyles.deleteButton}

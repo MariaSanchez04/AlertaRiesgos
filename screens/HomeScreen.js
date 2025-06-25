@@ -625,10 +625,7 @@ const HomeScreen = ({ navigation }) => {
             ]}
           >
             <TouchableOpacity
-              style={[
-                themeStyles.actionCard,
-                // Elimina minHeight aquí para que todas las cards usen solo el estilo base
-              ]}
+              style={themeStyles.actionCard}
               onPress={() => navigation.navigate("Takephoto")}
             >
               <View
@@ -640,10 +637,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                themeStyles.actionCard,
-                userInfo.role === "admin" && { marginTop: 16 }
-              ]}
+              style={themeStyles.actionCard}
               onPress={() => navigation.navigate("Reportes")}
             >
               <View
@@ -654,107 +648,86 @@ const HomeScreen = ({ navigation }) => {
               <Text style={themeStyles.actionCardText}>Reportes</Text>
             </TouchableOpacity>
 
-            {userInfo.role === "admin" && (
-              <TouchableOpacity
-                style={[
-                  themeStyles.actionCard,
-                  { marginTop: 16 }
-                ]}
-                onPress={() => navigation.navigate("AdminScreen")}
-              >
-                <View
-                  style={[themeStyles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
-                >
-                  <FontAwesome5 name="user-shield" size={22} color="#fff" />
-                </View>
-                <Text style={themeStyles.actionCardText}>Panel Admin</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Políticas y Emergencia juntos para admin */}
-            {userInfo.role === "admin" ? (
+            <TouchableOpacity
+              style={themeStyles.actionCard}
+              onPress={() => navigation.navigate("Politicas")}
+            >
               <View
-                style={{
-                  flexDirection: "row",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "stretch",
-                  marginTop: 16,
-                  gap: 12,
-                }}
+                style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
               >
-                <TouchableOpacity
-                  style={[themeStyles.actionCard, { flex: 1, margin: 0 }]}
-                  onPress={() => navigation.navigate("Politicas")}
-                >
-                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}>
-                    <FontAwesome5 name="file-alt" size={22} color="#fff" />
-                  </View>
-                  <Text style={themeStyles.actionCardText}>Políticas</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    themeStyles.actionCard,
-                    { flex: 1, margin: 0, marginLeft: 32 } // <-- Separa Emergencia de las otras cards
-                  ]}
-                  onPress={() => navigation.navigate("EmergenciaScreen")}
-                >
-                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}>
-                    <FontAwesome5 name="phone-alt" size={22} color="#fff" />
-                  </View>
-                  <Text
-                    style={[
-                      themeStyles.actionCardText,
-                      { width: "100%", textAlign: "center", fontSize: 15 }
-                    ]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit={false}
-                    ellipsizeMode="tail"
-                  >
-                    Emergencia
-                  </Text>
-                </TouchableOpacity>
+                <FontAwesome5 name="file-alt" size={22} color="#fff" />
               </View>
-            ) : (
-              // El resto del código para usuarios normales
+              <Text style={themeStyles.actionCardText}>Políticas</Text>
+            </TouchableOpacity>
+
+            {userInfo.role === "admin" ? (
+              // Fila adicional para admin con 3 botones uniformes
               <>
                 <TouchableOpacity
-                  style={[
-                    themeStyles.actionCard,
-                    { marginTop: 8 }, // Mantén solo el marginTop
-                    // Elimina height: undefined o cualquier height aquí
-                  ]}
-                  onPress={() => navigation.navigate("Politicas")}
+                  style={[themeStyles.actionCard, { marginTop: 16 }]}
+                  onPress={() => navigation.navigate("AdminScreen")}
                 >
                   <View
-                    style={[themeStyles.actionIconBg, { backgroundColor: "#F59E42" }]}
+                    style={[themeStyles.actionIconBg, { backgroundColor: "#8B5CF6" }]}
                   >
-                    <FontAwesome5 name="file-alt" size={22} color="#fff" />
+                    <FontAwesome5 name="user-shield" size={22} color="#fff" />
                   </View>
-                  <Text style={themeStyles.actionCardText}>Políticas</Text>
+                  <Text style={themeStyles.actionCardText}>Panel Admin</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={[
-                    themeStyles.actionCard,
-                    { marginTop: 16 } // <-- Menos separación entre Políticas y Emergencia
-                  ]}
+                  style={[themeStyles.actionCard, { marginTop: 16 }]}
                   onPress={() => navigation.navigate("EmergenciaScreen")}
                 >
-                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}>
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}
+                  >
                     <FontAwesome5 name="phone-alt" size={22} color="#fff" />
                   </View>
-                  <Text
-                    style={[
-                      themeStyles.actionCardText,
-                      { width: "100%", textAlign: "center", fontSize: 15 }
-                    ]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit={false}
-                    ellipsizeMode="tail"
-                  >
-                    Emergencia
-                  </Text>
+                  <Text style={themeStyles.actionCardText}>Emergencia</Text>
                 </TouchableOpacity>
+
+                {/* Botón invisible para mantener la estructura de 3 columnas */}
+                <View style={[themeStyles.actionCard, { opacity: 0, marginTop: 16 }]}>
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "transparent" }]}>
+                    <FontAwesome5 name="circle" size={22} color="transparent" />
+                  </View>
+                  <Text style={[themeStyles.actionCardText, { color: "transparent" }]}>
+                    Placeholder
+                  </Text>
+                </View>
+              </>
+            ) : (
+              // Fila adicional para usuarios normales
+              <>
+                <TouchableOpacity
+                  style={[themeStyles.actionCard, { marginTop: 16 }]}
+                  onPress={() => navigation.navigate("EmergenciaScreen")}
+                >
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "#2563EB" }]}
+                  >
+                    <FontAwesome5 name="phone-alt" size={22} color="#fff" />
+                  </View>
+                  <Text style={themeStyles.actionCardText}>Emergencia</Text>
+                </TouchableOpacity>
+
+                {/* Dos botones invisibles para mantener la estructura de 3 columnas */}
+                <View style={[themeStyles.actionCard, { opacity: 0, marginTop: 16 }]}>
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "transparent" }]}>
+                    <FontAwesome5 name="circle" size={22} color="transparent" />
+                  </View>
+                  <Text style={[themeStyles.actionCardText, { color: "transparent" }]}>
+                    Placeholder
+                  </Text>
+                </View>
+
+                <View style={[themeStyles.actionCard, { opacity: 0, marginTop: 16 }]}>
+                  <View style={[themeStyles.actionIconBg, { backgroundColor: "transparent" }]}>
+                    <FontAwesome5 name="circle" size={22} color="transparent" />
+                  </View>
+                  <Text style={[themeStyles.actionCardText, { color: "transparent" }]}>
+                    Placeholder
+                  </Text>
+                </View>
               </>
             )}
           </View>
@@ -956,13 +929,14 @@ const lightStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 16,
-    width: "30%",
+    width: "33%", // Uniforme para todas las tarjetas
     alignItems: "center",
     shadowColor: "#475569",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
+    minHeight: 100, // Altura mínima para las tarjetas
   },
   actionIconBg: {
     width: 50,
@@ -1406,6 +1380,7 @@ const darkStyles = StyleSheet.create({
     shadowOpacity: 0.10, // Un poco más de sombra para resaltar
     shadowRadius: 8,
     elevation: 3,
+    minHeight: 100, // Altura mínima para las tarjetas
   },
   actionIconBg: {
     width: 50,

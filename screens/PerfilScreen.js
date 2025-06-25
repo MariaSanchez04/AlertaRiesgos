@@ -133,6 +133,31 @@ const PerfilScreen = ({ navigation }) => {
     }
   };
 
+  const removeProfileImage = async () => {
+    Alert.alert(
+      "Eliminar foto",
+      "¿Deseas eliminar tu foto de perfil?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const userId = auth.currentUser.uid;
+              await updateDoc(doc(db, "users", userId), { photoURL: "" });
+              setUserInfo((prev) => ({ ...prev, photoURL: "" }));
+              Alert.alert("Éxito", "Foto de perfil eliminada");
+            } catch (error) {
+              Alert.alert("Error", "No se pudo eliminar la foto");
+              console.error(error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert("Cerrar sesión", "¿Estás seguro?", [
       { text: "Cancelar", style: "cancel" },
@@ -227,6 +252,19 @@ const PerfilScreen = ({ navigation }) => {
               <FontAwesome5 name="image" size={24} color="#2563eb" />
               <Text style={themeStyles.photoOptionText}>Elegir de la galería</Text>
             </TouchableOpacity>
+
+            {/* Opción para eliminar foto de perfil */}
+            {userInfo.photoURL ? (
+              <TouchableOpacity
+                style={themeStyles.photoOption}
+                onPress={removeProfileImage}
+              >
+                <FontAwesome5 name="trash" size={24} color="#ef4444" />
+                <Text style={[themeStyles.photoOptionText, { color: "#ef4444" }]}>
+                  Eliminar foto de perfil
+                </Text>
+              </TouchableOpacity>
+            ) : null}
 
             <TouchableHighlight
               style={themeStyles.cancelButton}
