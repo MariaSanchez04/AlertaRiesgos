@@ -38,7 +38,7 @@ const PerfilScreen = ({ navigation }) => {
   // Contexto de tema global
   const { theme, toggleTheme } = useContext(ThemeContext);
 
-  // Selecciona los estilos según el tema
+  
   const themeStyles = theme === "light" ? lightStyles : darkStyles;
 
   useEffect(() => {

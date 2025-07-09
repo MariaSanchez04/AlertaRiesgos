@@ -15,7 +15,7 @@ import { ThemeContext } from "../src/context/ThemeContext";
 
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState("");
-  const [showEmail, setShowEmail] = useState(true); // ojo si quieres ocultar el email
+  const [showEmail, setShowEmail] = useState(true); 
   const [isLoading, setIsLoading] = useState(false);
 
   // Contexto de tema global

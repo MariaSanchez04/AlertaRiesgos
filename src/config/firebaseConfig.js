@@ -73,7 +73,7 @@ export const registerUser = async (email, password, firstName, lastName) => {
       email,
       firstName,
       lastName,
-      role: "ciudadano", // Rol predeterminado
+      role: "ciudadano", 
     });
 
     console.log("Cuenta creada exitosamente");
@@ -95,7 +95,7 @@ export const registerUser = async (email, password, firstName, lastName) => {
   }
 };
 
-// Asegura que el usuario tenga un rol (para usuarios antiguos)
+
 export const ensureUserRole = async (userId) => {
   try {
     const userRef = doc(db, "users", userId);
@@ -124,7 +124,7 @@ export const loginUser = async (email, password) => {
 
     const user = userCredential.user;
 
-    // Asegurar rol si falta
+    
     await ensureUserRole(user.uid);
 
     console.log("Inicio de sesión exitoso");
@@ -160,7 +160,7 @@ export const actualizarReportes = async () => {
     querySnapshot.forEach(async (documento) => {
       const data = documento.data();
 
-      // Si el campo correoUsuario no existe, lo agregamos
+      
       if (!data.correoUsuario) {
         const reporteRef = doc(db, "reportes", documento.id);
         await updateDoc(reporteRef, {

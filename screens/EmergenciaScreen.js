@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, Linking } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { ThemeContext } from "../src/context/ThemeContext"; // Asegúrate de que la ruta sea correcta
+import { ThemeContext } from "../src/context/ThemeContext"; 
 
 export default function EmergenciaScreen({ navigation }) {
   const { theme } = useContext(ThemeContext);
@@ -41,29 +41,29 @@ export default function EmergenciaScreen({ navigation }) {
         </Text>
         <TouchableOpacity
           style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
+          onPress={() => Linking.openURL("tel:6076447235")}
         >
           <FontAwesome5 name="shield-alt" size={20} color="#2563EB" style={{ marginRight: 10 }} />
           <Text style={[themeStyles.text, { color: "#2563EB", textAlign: "left", marginTop: 0 }]}>
-            Policía Nacional: 313 498 1179
+            Policía Nacional: 607 6447235
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
+          onPress={() => Linking.openURL("tel:6076526666")}
         >
           <FontAwesome5 name="fire-extinguisher" size={20} color="#EF4444" style={{ marginRight: 10 }} />
           <Text style={[themeStyles.text, { color: "#EF4444", textAlign: "left", marginTop: 0 }]}>
-            Bomberos: 313 498 1179
+            Bomberos: 607 6526666
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={themeStyles.emergencyRow}
-          onPress={() => Linking.openURL("tel:3134981179")}
+          onPress={() => Linking.openURL("tel:3158028165")}
         >
           <FontAwesome5 name="ambulance" size={20} color="#10B981" style={{ marginRight: 10 }} />
           <Text style={[themeStyles.text, { color: "#10B981", textAlign: "left", marginTop: 0 }]}>
-            Ambulancia: 313 498 1179
+            Ambulancia: 315 8028165
           </Text>
         </TouchableOpacity>
       </ScrollView>

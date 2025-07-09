@@ -1,4 +1,3 @@
-// cloudinaryUpload.js
 import axios from "axios";
 import { CLOUD_NAME, UPLOAD_PRESET } from "../src/config/cloudinary";
 

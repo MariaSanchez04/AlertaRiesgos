@@ -13,7 +13,7 @@ import AdminScreen from "./screens/AdminScreen";
 import PerfilScreen from "./screens/PerfilScreen";
 import ForgotPasswordScreen from "./screens/ForgotPassword";
 import ChangePasswordScreen from "./screens/ChangePassword";
-import PoliticasScreen from "./screens/PoliticasScreen"; // Agrega esta línea
+import PoliticasScreen from "./screens/PoliticasScreen"; 
 import EmergenciaScreen from "./screens/EmergenciaScreen";
 
 const Stack = createStackNavigator();
